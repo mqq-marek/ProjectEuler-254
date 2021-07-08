@@ -1,13 +1,76 @@
 """
 Euler challenge from HackerRank https://www.hackerrank.com/contests/projecteuler/challenges/euler254/problem
 
-Initial design based on problem definition
+Simple optimizations
 
 """
 import math
 import time
+from functools import reduce
 
 DEBUG = False
+
+FACTORIALS = [math.factorial(i) for i in range(10)]
+
+
+def digits_gen(n):
+    """
+    Yields number n digits in reverse sequence. For n = 342 sequence is 2, 4, 3
+    :param n:
+    :return:
+    """
+    while True:
+        yield n % 10
+        n //= 10
+        if not n:
+            break
+
+
+def sum_digits(n):
+    if isinstance(n, int):
+        return sum([d for d in digits_gen(n)])
+    elif isinstance(n, str):
+        return sum([ord(d) - ord('0') for d in n])
+    else:
+        return sum([d for d in n.digits_gen()])
+
+
+class Digits:
+    def __init__(self, number):
+        self.num = list(digits_gen(number))
+
+    def __str__(self):
+        return ''.join([chr(d+ord('0')) for d in self.num[::-1]])
+
+    @property
+    def value(self):
+        return reduce(lambda x, y: x * 10 + y, self.num[::-1])
+
+
+    def next(self, start_digit=0):
+        def make_descending(k):
+            filler = self.num[k]
+            for ii in range(k-1, start_digit - 1, -1):
+                self.num[ii] = filler
+
+        ndx = start_digit
+        while True:
+            if self.num[ndx] < 9:
+                self.num[ndx] += 1
+                make_descending(ndx)
+                return self
+            elif ndx < len(self.num) - 1:
+                self.num[ndx] = 0
+                ndx += 1
+            else:
+                self.num.append(1)
+                make_descending(ndx+1)
+                # print('Nums len increasing ', nums)
+                return self
+
+    def digits_gen(self):
+        for d in self.num:
+            yield d
 
 
 def f(n):
@@ -18,31 +81,71 @@ def f(n):
     :param n: number
     :return: sum digits factorial of n
     """
-    return sum([math.factorial(int(ch)) for ch in str(n)])
+    if isinstance(n, int):
+        return sum([FACTORIALS[d] for d in digits_gen(n)])
+    else:
+        return sum([FACTORIALS[d] for d in n.digits_gen()])
+
+
+sf_cache = {}
 
 
 def sf(n):
     """
-    Define sf(n) as the sum of the digits of f(n).
+    Compute sf(n) as the sum of the digits of f(n).
+    Store in sf_cache the value n for which the reached the first time key sf(n)
     So:
-    sf(342) = 3 + 2 as f(342) is 3! + 4! +2! = 32
+    sf(144) = 4 + 9 = 13 as f(144) is 1!+4!+4! = 49
+    For n = 144 is minimum n such that sf(n) = 13 so sf_cache[13] = 144
     :param n: number
     :return: sum digits of f(n)
     """
-    return sum([int(ch) for ch in str(f(n))])
+    sf_ = sum([d for d in digits_gen(f(n))])
+    sf_cache.setdefault(sf_, str(n))
+    return sf_
 
 
 def g(i):
     """
     Define g(i) to be the smallest positive integer n such that sf(n) == i.
     sf(342) = 5, also sf(25) = 5 and 25 is the smallest number giving sf(i) = 5, so g(5) = 25
+    Using cached value. g_sequence with parameter not less than i must be called earlier
     :param i: number
     :return: smallest n such that sf(n) == i
     """
-    n = 1
-    while sf(n) != i:
-        n += 1
-    return n
+    return int(sf_cache.get(i))
+
+
+def g_sequence(max_i):
+    """
+    Looks for g(i) in range 1..max_i
+    Define g(i) to be the smallest positive integer n such that sf(n) == i.
+    Results are in a global cached dictionary
+    sf(342) = 5, also sf(25) = 5 and 25 is the smallest number giving sf(i) = 5, so g(5) = 25
+    :param max_i: range for compute g(i) from 1 to max_i
+    :return: None
+    """
+    n = Digits(1)
+    for i in range(1, max_i + 1):
+        if not sf_cache.get(i):
+            start_time = time.perf_counter()
+            while sf(n) != i:
+                n.next()
+            stop_time = time.perf_counter()
+            if DEBUG:
+                print(
+                    f"For n = {str(n):10} sf(n) = {i:2}. sg({i:2}) = {sum_digits(n):2}. "
+                    f"Time: {stop_time-start_time:8.4f} seconds"
+                )
+        else:
+            if DEBUG:
+                print(
+                    f"For n = {sf_cache[i]:10} sf(n) = {i:2}. "
+                    f"sg({i:2}) = {sum_digits(sf_cache[i]):2}. "
+                    f"Time: Computed in earlier step"
+                )
+
+    return sf_cache
 
 
 def sg(i):
@@ -52,25 +155,19 @@ def sg(i):
     :param i:
     :return: sum digits of g(i)
     """
-    start_time = time.perf_counter()
-    n = g(i)
-    sg_ = sum([int(ch) for ch in str(n)])
-    stop_time = time.perf_counter()
-    if DEBUG:
-        print(
-            f"For n = {n:10} sf(n) = {i:2}. sg({i:2}) = {sg_:2}. Time: {stop_time-start_time:8.4f} seconds"
-        )
-    return sg_
+    return sum_digits(sf_cache[i])
 
 
 def sum_sg(n):
+    g_sequence(n)
+    print(sf_cache)
     return sum([sg(i) for i in range(1, n + 1)])
 
 
 if __name__ == "__main__":
     DEBUG = True
     pgm_start = time.perf_counter()
-    nn = 45
+    nn = 56
     total = sum_sg(nn)
     pgm_stop = time.perf_counter()
     print(f"sum_sg({nn}) is {total} computed in {pgm_stop-pgm_start:.2f} seconds")
