@@ -1,7 +1,7 @@
 """
 Euler challenge from HackerRank https://www.hackerrank.com/contests/projecteuler/challenges/euler254/problem
 
-Initial design based on problem definition
+Initial design
 
 """
 import math
@@ -10,13 +10,24 @@ import time
 DEBUG = False
 
 
+def digits_sum(n):
+    """
+    Returns sum of digits of number n
+    For example:
+        digits_sum(245) = 2 + 4 + 5
+    :param n: n
+    :return: sum of digits
+    """
+    return sum([int(ch) for ch in str(n)])
+
+
 def f(n):
     """
-    Define f(n) as the sum of the factorials of the digits of n.
+    Define f(n) as the sum of the digit factorials for given number n.
     For example:
         f(342) = 3! + 4! + 2! = 32
     :param n: number
-    :return: sum digits factorial of n
+    :return: sum digit factorial
     """
     return sum([math.factorial(int(ch)) for ch in str(n)])
 
@@ -29,7 +40,7 @@ def sf(n):
     :param n: number
     :return: sum digits of f(n)
     """
-    return sum([int(ch) for ch in str(f(n))])
+    return digits_sum(f(n))
 
 
 def g(i):
@@ -54,7 +65,7 @@ def sg(i):
     """
     start_time = time.perf_counter()
     n = g(i)
-    sg_ = sum([int(ch) for ch in str(n)])
+    sg_ = digits_sum(n)
     stop_time = time.perf_counter()
     if DEBUG:
         print(

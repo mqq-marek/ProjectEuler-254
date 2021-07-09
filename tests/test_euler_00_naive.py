@@ -1,11 +1,4 @@
-import pytest
-# import euler.euler_00_naive as e
-import euler.euler_day_01 as e
-
-
-@pytest.fixture(scope="session", autouse=True)
-def execute_before_any_test():
-    e.g_sequence(40)
+import euler.euler_00_naive as e
 
 
 def test_f():
@@ -35,8 +28,13 @@ def test_sg():
     assert e.sg(3) == 5
     assert e.sg(4) == 6
     assert e.sg(5) == 7
+    assert e.sg(10) == 7
     assert e.sg(20) == 15
+    assert e.sg(40) == 25
 
 
 def test_sum_sg():
+    assert e.sum_sg(5) == 21
+    assert e.sum_sg(10) == 46
     assert e.sum_sg(20) == 156
+    assert e.sum_sg(40) == 468

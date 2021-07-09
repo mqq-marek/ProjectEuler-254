@@ -1,41 +1,61 @@
 # hackerrank-euler
 ## Day 0
 
-As the first step we build solution based on definition provided.
-Let's make initial tests based on source document, 
-build initial solution and add simple "print" reporting functionalities.
+As the first step we build solution based on problem stated on
+[HackerRank](https://www.hackerrank.com/contests/projecteuler/challenges/euler254/problem) 
+as Project Euler #254: Sums of Digit Factorials
 
-That is naive approach base on provided functions definition.
+That is naive approach base implemented functions definition as is.
+```python
+import math
+
+def digits_sum(n):
+    return sum([int(ch) for ch in str(n)])  
+
+def f(n):
+    return sum([math.factorial(int(ch)) for ch in str(n)])
+
+def sf(n):
+    return digits_sum(f(n))
+
+def g(i):
+    n = 1
+    while sf(n) != i:
+        n += 1
+    return n
+
+def sg(i):
+    return digits_sum(g(i))
+
+def sum_sg(n):
+    return sum([sg(i) for i in range(1, n + 1)])
+```
+
+Day 0 contains initial code extended with simple reporting and test cases.
+
+By using this approach you can compute function sg until value 45 in around 
+90 seconds on 
+Intel(R) Core(TM) i5-4310U CPU @ 2.00GHz   2.60 GHz.
+
+Python code is in file euler_00_naive.py. 
+Tests are in test_euler_00_naive.py. 
 
 Initial analysis will be done next day.
 
-You can notice that we can compute function sg until value 45 
-which takes in total 90 seconds on 
-Intel(R) Core(TM) i5-4310U CPU @ 2.00GHz   2.60 GHz.
-
-Initial code is in file euler_00_naive.py
-
 ## Day 1
 
-Let starts with pre-define factorial values for digits:
-```python
-FACTORIALS = [math.factorial(i) for i in range(10)]
+We start with some basic refactoring.
 
-def f(n):
-   return sum([FACTORIALS[int(ch)] for ch in str(n)])
+Let's start with define factorial values for digits:
+```python
+import math
+FACTORIALS = [math.factorial(i) for i in range(10)]
 ```
 
-Instead of converting integer to text for text digits 
-and converting text digits to int indexes let's make 
-generator which yields int digits from n.
-This generator yields digits in reverse order but 
-return result is factorials sum,
-so it is not depend on digits order.
+Next let's improve number conversion into list of digits with generator.
+This generator yields digits in reverse order but digits sum is not depend on the digits order.
 
-```buildoutcfg
-FACTORIALS = [math.factorial(i) for i in range(10)]
-
-
+```python
 def digits_gen(n):
     while True:
         yield n % 10
@@ -43,38 +63,38 @@ def digits_gen(n):
         if not n:
             break
 
+def digits_sum(n):
+    return sum([d for d in digits_gen(n)])   
+
 def f(n):
     return sum([FACTORIALS[d] for d in digits_gen(n)])
     
-    
 def sf(n): 
-    return sum([d for d in digits_gen(f(n))])  
+    return digits_sum(f(n)) 
 ```
 
 Now let's look at function sg. Our final function sum_sg need 
 to compute sg & g for values from 1 to n and compute sg sum as a result.
-That's mean that it is good to cache g values for next sum_sg call.
-Other observation is that for every g(i) computation we start with n = 1 
-instead of find a way to resume g computation for next value 
-from previous n value.
+That's mean that it is good to cache g values in case of next call.
+Other observation is that for every g(i) we start loop with n = 1. 
+instead of find a way to resume g computation from previous n value.
 
 So let's start the first with update sf function to store in cache 
-under integer key i such lowest integer n for which sf(n) == i.
+under integer key i such the lowest integer n for which sf(n) == i.
 
 ```python
 sf_cache = {}
 
-
 def sf(n):
-    sf_ = sum([d for d in digits_gen(f(n))])
-    sf_cache.setdefault(sf_, n)
+    sf_ = digits_sum(f(n))
+    sf_cache.setdefault(sf_, str(n))
     return sf_
 ```
 
 And instead of g(i) lets define g_sequence(i) 
 which will scan n form 1 until its find g(1), g(2), ..., g(n)
 
-```
+```python
 def g_sequence(max_i):
     n = 1
     for i in range(1, max_i + 1):
@@ -95,22 +115,25 @@ def g_sequence(max_i):
                     f"sg({i:2}) = {sum([d for d in digits_gen(sf_cache[i])]):2}. "
                     f"Time: Computed in earlier step"
                 )
-
     return sf_cache
 ```
 
 The last change we made before detailed task analysis is the way how 
-we will represent numbers on which we will work later.
+we will represent numbers on which we will work.
 
 Let's define class Digits which will represent the numbers.
 Class digits will represent number as a list of integers 0-9 
 representing digits starting from least significant (reversed order).
 We define methods __str__, digits_gen and next.
-Method next finds the next number for testing f values based on 
-the following observation:
-- When we compute f(n) = x we look only for the minimal n giving x 
-  as later we look only for minimal n such that sf(n) = s(f(n)) = i
-- if we have sequence od digits d[0],...,d[i], d[i+1], ....d[k] then
+Method next will find the next number for testing f values. 
+
+We make them slightly better than just take the next integer.
+- When we compute f(n) = x we are interested only in the minimal n giving x 
+  as later we look only for minimal n such that sf(n) = s(f(n)) = i. 
+  So if we have numbers n0, n1, n2, ... having the same f_value 
+  we need to find the smallest one and skip all others. 
+  Eg 2 = f(2) = f(11) = f(1223) = f(2333). So only 2 necessary.
+- If we have sequence od digits d[0],...,d[i], d[i+1], ....d[k] then
 f(d[0]....d[k]) = f(d[0])...f(d[i]) + f(d[i+1]...d[k]) based on f definition
 - If we have minimal n where s(f(n)) = i, then n does not contain 0. 
   We can substitute 10 by 2 because f(10)=f(2) and 2 < 10. We can
@@ -118,7 +141,49 @@ f(d[0]....d[k]) = f(d[0])...f(d[i]) + f(d[i+1]...d[k]) based on f definition
 - Minimal n giving f(n)=x has digits in not decreasing order. 
   If some digits are decreasing like 32 then f(23)=f(32) and 23 < 32
 
-```buildoutcfg
+Based on this next method when going to next number for computing f(n) 
+works in a way that next number after 239999 is 244444 not 24000 
+because all numbers between 24000 and 24443 can be reduced to smaller number which gives the same value,
+so they were processed earlier if we process number in increasing order.
+
+```python
+class Digits:
+    def __init__(self, number):
+        self.num = list(digits_gen(number))
+
+    def __str__(self):
+        return ''.join([chr(d+ord('0')) for d in self.num[::-1]])
+
+    @property
+    def value(self):
+        return reduce(lambda x, y: x * 10 + y, self.num[::-1])
+
+    def next(self, start_digit=0):
+        def set_after_carry_on(k):
+            """ Set digits after carry on 1.
+            Instead of  0 fill with updated digit
+            Eg. 2999 + 1 is 3333 not 3000
+            """
+            filler = self.num[k]
+            for ii in range(k-1, start_digit - 1, -1):
+                self.num[ii] = filler
+
+        ndx = start_digit
+        while True:
+            if self.num[ndx] < 9:
+                # Non 9 digit so increase it and set all on right to the same value
+                self.num[ndx] += 1
+                set_after_carry_on(ndx)
+                return self
+            elif ndx < len(self.num) - 1:
+                # if digit 9 then go to next digit
+                self.num[ndx] = 0
+                ndx += 1
+            else:
+                # if all digits are 9, then new digit starting with
+                self.num.append(1)
+                set_after_carry_on(ndx+1)
+                return self
 
 ```
 
@@ -127,12 +192,27 @@ but it allows as to increase computing sum_sg from 45 to only 55
 in around minute.
 For g(45), n is 12378889
 For g(55), n is 1333666799999999999
-For g(56), n is 12245556666799999999999
-So you can notice the n size increases very fast, so the methods 
+For g(60), n is 1233456679999999999999999999999
+
+You can notice the n size increases very fast, so the methods 
 which is based on finding incrementally such n that g(n) = i 
 for i > 70 will not work.
 
 In next part we will look more detailed how functions f(n)/sf(n) works 
 and how to find other method for compute g(i) for bigger i.
 
+Python code is in file euler_day_01.py. 
+Tests are in test_euler_day_01.py. 
 
+## Day 2
+We will look more detailed on the way how different n gives the same f(n). 
+
+Our goal is to find cheap methods of finding g(i).
+
+At the moment for finding g(i) where i>60 we need scan 
+numbers in increasing order which has more than 32 digits 
+so this approach will not work for longer i.
+
+As you noticed yesterday interesting numbers has digits ordered from smallest to highest.
+We also notice yesterday some reduction property: if n has two 11 digits it can be 
+replaced by 2 and we wil

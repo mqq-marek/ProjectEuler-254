@@ -43,30 +43,3 @@ def test_digits_f():
     assert e.f(Digits(5)) == 120
     assert e.f(Digits(25)) == 122
 
-
-def test_sf():
-    assert e.sf(342) == 5
-    assert e.sf(5) == 3
-    assert e.sf(25) == 5
-
-
-def test_g():
-    assert e.g(1) == 1
-    assert e.g(2) == 2
-    assert e.g(3) == 5
-    assert e.g(4) == 15
-    assert e.g(5) == 25
-    assert e.g(20) == 267
-
-
-def test_sg():
-    assert e.sg(1) == 1
-    assert e.sg(2) == 2
-    assert e.sg(3) == 5
-    assert e.sg(4) == 6
-    assert e.sg(5) == 7
-    assert e.sg(20) == 15
-
-
-def test_sum_sg():
-    assert e.sum_sg(20) == 156
