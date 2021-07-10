@@ -73,6 +73,7 @@ def sf(n):
     return digits_sum(f(n)) 
 ```
 
+
 Now let's look at function sg. Our final function sum_sg need 
 to compute sg & g for values from 1 to n and compute sg sum as a result.
 That's mean that it is good to cache g values in case of next call.
@@ -117,6 +118,7 @@ def g_sequence(max_i):
                 )
     return sf_cache
 ```
+
 
 The last change we made before detailed task analysis is the way how 
 we will represent numbers on which we will work.
@@ -213,6 +215,127 @@ At the moment for finding g(i) where i>60 we need scan
 numbers in increasing order which has more than 32 digits 
 so this approach will not work for longer i.
 
-As you noticed yesterday interesting numbers has digits ordered from smallest to highest.
-We also notice yesterday some reduction property: if n has two 11 digits it can be 
-replaced by 2 and we wil
+As you noticed yesterday interesting numbers has digits ordered 
+from smallest to highest.
+We also notice yesterday some reduction property: 
+if n has two 11 digits it can be 
+replaced by 2 which is lower number 
+as it's length is shorter by one digit.
+So we know that numbers which are result of g(i) have maximum one digit 1.
+
+If we apply the same rules to others digit we can easily find that:
+- f(222) = f(3) as 2!+2!+2! = 3!
+- f(3333) = f(4)
+- ...
+- f(888888888) = f(9) as 9 * 8! = 9!
+
+As a result that number candidates for being n such that g(i)=i have
+the following pattern:
+
+^1{0,1}2{0,2}3{0,3}4{0,4}5{0,5}6{0,6}7{0,7}8{0,8}9*$
+
+- number need to have minimum one digit 
+- digits are in ascending order
+- there is max 1 time 1, 2 times 2, ..., 8 times 8 and any number of 9 digits
+
+That allows as build all prospect numbers as two part string 
+the first one which is a prefix build from digits 1..8 and 
+suffix which is any number of digits 9.
+There are maximum 9! prefixes with max length 36 digits.
+
+So now algorithm for method next in class Digits can look sometimes like:
+Lets assume we have current number n having length k:
+- with prefix length l (0<=l<=k))
+- suffix (digits 9) length k-l (0<=k-l<=k)
+
+Next n based on the pattern described above can be build 
+in the following way:
+- get next prefix with the sam length l if next prefix exist, otherwise
+- add digit 9 to suffix and decrease prefix length by 1 
+  and place the first prefix with this length 
+  if prefix length was not zero, otherwise
+- increase number length k by 1 and build new number as the first prefix with length k if k <= 36, otherwise
+- if k > 36 add k-36 digits n at the end
+
+
+```python
+PREFIXES = defaultdict(list)
+for i1 in range(2):
+    for i2 in range(3):
+        for i3 in range(4):
+            for i4 in range(5):
+                for i5 in range(6):
+                    for i6 in range(7):
+                        for i7 in range(8):
+                            for i8 in range(9):
+                                i = i1 + i2 + i3 + i4 + i5 + i6 + i7 + i8
+                                PREFIXES[i].append(''.join(['1'*i1, '2'*i2, '3'*i3, '4'*i4, 
+                                                            '5'*i5, '6'*i6, '7'*i7, '8'*i8]))
+
+class Digits:
+    def __init__(self, number):
+        self.num = list(digits_gen(number))
+        self.suffix_len = sum([1 for d in self.num if d == 9])
+        self.prefix_len = len(self.num) - self.suffix_len
+        self.prefix_pos = 0
+        self.prefix_size = len(PREFIXES[self.prefix_len])  
+        
+    def next(self):
+        self.prefix_pos += 1
+        if self.prefix_pos < self.prefix_size:
+            prefix = PREFIXES[self.prefix_len][self.prefix_pos][::-1]
+            for i in range(self.prefix_len):
+                self.num[i + self.suffix_len] = prefix[i]
+            return self
+        elif self.prefix_len:
+            self.num[self.suffix_len] = 9
+            self.suffix_len += 1
+            self.prefix_len -= 1
+            self.prefix_pos = 0
+            self.prefix_size = len(PREFIXES[self.prefix_len])
+            prefix = PREFIXES[self.prefix_len][self.prefix_pos][::-1]
+            for i in range(self.prefix_len):
+                self.num[i + self.suffix_len] = prefix[i]
+            return self
+        else:
+            # increase size
+            self.num.append(0)
+            k = len(self.num)
+            self.prefix_len = min(k, 36)
+            self.suffix_len = k - self.prefix_len
+            self.prefix_pos = 0
+            self.prefix_size = len(PREFIXES[self.prefix_len])
+            for i in range(self.suffix_len):
+                self.num[i] = 9
+            prefix = PREFIXES[self.prefix_len][self.prefix_pos][::-1]
+            for i in range(self.prefix_len):
+                self.num[i + self.suffix_len] = prefix[i]
+            return self
+
+```
+
+Now we can compute sg(70) in around 6 minutes.
+It gives us speed increase 60 times comparing previous algorithm 
+and 30,000 comparing initial on.
+
+Algorithm speed start to be proportional to length of n while 
+at the beginning it was expotentional comparing length of n
+
+For sf(70) n has 320 digits - see below:
+
+For n = 13444788889999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 sf(n) = 70. sg(70) = 2035. Time: 427.1509 seconds
+
+
+
+Python code is in file euler_day_02.py. 
+
+Tests are in test_euler_day_02.py. 
+
+
+
+
+
+
+
+
+
