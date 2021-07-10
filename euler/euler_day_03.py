@@ -279,32 +279,25 @@ def g_sequence(max_i):
     """
     n = Digits(1)
     for i in range(1, max_i + 1):
-        i_digit = single_digit_sum(i)
-        prefixes = P[i_digit].get(i)
+        best = None
+        single_i = single_digit_sum(i)
+        prefixes = P[single_i].get(i)
         if prefixes:
-            prospect = prefixes[0][0]
-            p_len = len(prospect)
+            best = prefixes[0][0]
+            best_len = len(best)
         n9 = 1
         while True:
+            suffix = FACTORIALS[9] * n9
+            suffix_sum = digits_sum(suffix)
+            single_suffix = single_digit_sum(suffix_sum)
+            single_prefix = single_i - single_suffix if single_i > single_suffix else single_suffix - single_i - 1
+            prefixes = P[single_prefix].get(i - suffix_sum, [])
+            for p in prefixes:
+                if digits_sum(suffix+p[1]) == i:
+                    # found new prospect
+            n9 += 1
 
-            prefixes = P[i_digit].get(i)
-        if not sf_cache.get(i):
-            start_time = time.perf_counter()
-            while sf(n) != i:
-                n.next()
-            stop_time = time.perf_counter()
-            if DEBUG:
-                print(
-                    f"For n = {str(n):10} sf(n) = {i:2}. sg({i:2}) = {digits_sum(n):2}. "
-                    f"Time: {stop_time-start_time:8.4f} seconds"
-                )
-        else:
-            if DEBUG:
-                print(
-                    f"For n = {sf_cache[i]:10} sf(n) = {i:2}. "
-                    f"sg({i:2}) = {digits_sum(sf_cache[i]):2}. "
-                    f"Time: Computed in earlier step"
-                )
+
 
     return sf_cache
 
