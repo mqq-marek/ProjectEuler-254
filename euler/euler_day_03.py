@@ -279,6 +279,15 @@ def g_sequence(max_i):
     """
     n = Digits(1)
     for i in range(1, max_i + 1):
+        i_digit = single_digit_sum(i)
+        prefixes = P[i_digit].get(i)
+        if prefixes:
+            prospect = prefixes[0][0]
+            p_len = len(prospect)
+        n9 = 1
+        while True:
+
+            prefixes = P[i_digit].get(i)
         if not sf_cache.get(i):
             start_time = time.perf_counter()
             while sf(n) != i:
