@@ -11,11 +11,6 @@ from functools import reduce
 from itertools import combinations
 
 DEBUG = False
-
-PREFIX_MAX = [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6,
-              6, 6, 6, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8]
-
-
 FACTORIALS = [math.factorial(i) for i in range(10)]
 
 
@@ -55,13 +50,10 @@ class Digits:
             self.num = [ord(ch) - ord('0') for ch in number[::-1]]
         else:
             self.num = number.num
-        self.suffix_len = sum([1 for d in self.num if d == 9])
-        self.prefix_len = len(self.num) - self.suffix_len
-        self.prefix_pos = 0
 
     def __str__(self):
         """ Return number value as str """
-        return ''.join([chr(d + ord('0')) for d in self.num[::-1]])
+        return ''.join([chr(d+ord('0')) for d in self.num[::-1]])
 
     @property
     def value(self):
@@ -69,31 +61,45 @@ class Digits:
         return reduce(lambda x, y: x * 10 + y, self.num[::-1])
 
     def next(self, start_digit=0):
-        def set_after_carry_on(k):
-            """ Set digits after carry on 1.
-            Instead of  0 fill with updated digit
-            Eg. 2999 + 1 is 3333 not 3000
+        def update(d, pos):
             """
-            filler = self.num[k]
-            copy_len = k - start_digit
-            if filler == 9:
-                index = len(PREFIX_MAX)
-            else:
-                index = PREFIX_MAX.index(filler) + 1
+            Keep max d digits d from position pos
+            :param d: digit to verify occurs no more than d times except 9
+            :param pos: starting position
+            :return: return next digit, position for next verify
+            """
+            # to is max position for d times digit d. if d is 9 no limit for digit 9 so position is up to 0
+            to = pos - d if d < 9 else -1
+            for i in range(pos, to, -1):
+                if i < 0:   # return no more updates if process the whole number
+                    return None, None
+                if self.num[i] < d:  # less digit not allowed, so substitute current digit on next position
+                    self.num[i] = d
+                if self.num[i] > d:  # higher digit OK, so process for this digit starting from current pos
+                    return self.num[i], i
+            # now we are after d times digit d
+            if to < 0:  # exit if end of number
+                return None, None
+            if self.num[pos - d] <= d + 1:   # next digit must be minimum one higher than previous
+                self.num[pos - d] = d + 1
+            return self.num[pos-d], pos-d  # process next number
 
-            for ndx in range(copy_len):
-                if ndx + index < len(PREFIX_MAX):
-                    self.num[k - 1 - ndx] = PREFIX_MAX[index + ndx]
-                else:
-                    self.num[k - 1 - ndx] = 9
+        def update_prefix():
+            """
+            Update number to fulfill PREFIX definition 122333444455555...
+            """
+            start = len(self.num) - 1
+            digit, start = update(self.num[start], start)
+            while digit:
+                digit, start = update(digit, start)
+            # print(self.num)
 
         ndx = start_digit
         while True:
             if self.num[ndx] < 9:
                 # Non 9 digit so increase it and set all on right to the same value
                 self.num[ndx] += 1
-                set_after_carry_on(ndx)
-                # print(self.value)
+                update_prefix()
                 return self
             elif ndx < len(self.num) - 1:
                 # if digit 9 then go to next digit
@@ -101,8 +107,9 @@ class Digits:
                 ndx += 1
             else:
                 # if all digits are 9, then new digit starting with
+                self.num[ndx] = 0
                 self.num.append(1)
-                set_after_carry_on(ndx + 1)
+                update_prefix()
                 return self
 
     def digits_gen(self):
@@ -176,21 +183,18 @@ def g_sequence(max_i):
             stop_time = time.perf_counter()
             if DEBUG:
                 n9 = sum([1 for d in n.num if d == 9])
-                diff = f(n) - f(int('0'+'9'*n9))
+                diff = f(n) - f(int('0' + '9' * n9))
                 print(
-                    f"f(n) = {f(n):10}, f({n9:3}*9) = {f(int('0'+'9'*n9)):10}, diff={diff:8}, "
+                    f"f(n) = {f(n):10}, "
                     f"sf(n) = {i:2}. sg({i:2}) = {digits_sum(n):4}. "
-                    f"Time: {stop_time - start_time:8.4f} seconds for n[{len(str(n)):2}] = {str(n):10} "
+                    f"Time: {stop_time - start_time:8.4f} seconds for len(n) = {len(str(n)):2}, n = {str(n):10} "
                 )
-                print(f"Singe digits for f(n) = {single_digit_sum(f(n))}, "
-                      f"f({n9:3}*9) = {single_digit_sum(f(int('0'+'9'*n9)))} "
-                      f"f(diff) = {single_digit_sum(diff)}")
         else:
             if DEBUG:
                 print(
-                    f"f(n) = {f(int(sf_cache[i])):10}, sf(n) = {i:2}. "
-                    f"sg({i:2}) = {digits_sum(sf_cache[i]):4}. "
-                    f"Time: Already computed For n[{len(str(sf_cache[i])):2}] = {sf_cache[i]:10} "
+                    f"f(n) = {f(int(sf_cache[i])):10}, "
+                    f"sf(n) = {i:2}. sg({i:2}) = {digits_sum(sf_cache[i]):4}. "
+                    f"Time: Already computed For len(n) = {len(str(sf_cache[i])):2}, n = {sf_cache[i]:10} "
                 )
 
     return sf_cache
@@ -208,16 +212,17 @@ def sg(i):
 
 def sum_sg(n):
     g_sequence(n)
-    print(sf_cache)
+    # print(sf_cache)
     return sum([sg(i) for i in range(1, n + 1)])
 
 
 def sum_sg_mod(n, m):
     g_sequence(n)
     s = 0
-    for i in range(1, n+1):
+    for i in range(1, n + 1):
         s = (s + sg(i)) % m
     return s
+
 
 def main():
     q = int(input())
@@ -230,7 +235,7 @@ def main():
 if __name__ == "__main__":
     DEBUG = True
     pgm_start = time.perf_counter()
-    nn = 70
+    nn = 55
     total = sum_sg(nn)
     pgm_stop = time.perf_counter()
     print(f"sum_sg({nn}) is {total} computed in {pgm_stop - pgm_start:.2f} seconds")

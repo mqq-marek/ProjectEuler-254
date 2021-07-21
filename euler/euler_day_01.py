@@ -77,6 +77,7 @@ class Digits:
             else:
                 # if all digits are 9, then new digit starting with
                 self.num.append(1)
+                self.num[ndx] = 0
                 set_after_carry_on(ndx+1)
                 return self
 
@@ -182,7 +183,7 @@ def sum_sg(n):
 if __name__ == "__main__":
     DEBUG = True
     pgm_start = time.perf_counter()
-    nn = 60
+    nn = 55
     total = sum_sg(nn)
     pgm_stop = time.perf_counter()
     print(f"sum_sg({nn}) is {total} computed in {pgm_stop-pgm_start:.2f} seconds")
