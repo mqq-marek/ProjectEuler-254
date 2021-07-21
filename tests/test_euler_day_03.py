@@ -1,49 +1,41 @@
 import pytest
-import euler.euler_day_01 as e
-from euler.euler_day_01 import Digits, sg
+import euler.euler_day_03 as e
+from euler.euler_day_03 import FDigits, sg
 
 
 @pytest.fixture(scope="session", autouse=True)
 def execute_before_any_test():
-    e.g_sequence(45)
+    e.init_prefixes()
+    e.g_sequence(55)
 
 
-def test_digits_gen():
+def test_digits_gen_3():
     assert list(e.digits_gen(0)) == [0]
     assert list(e.digits_gen(10)) == [0, 1]
     assert list(e.digits_gen(342)) == [2, 4, 3]
     # check list representation
     for i in range(10):
-        assert list(e.digits_gen(i)) == Digits(i).num
+        assert list(e.digits_gen(i*e.FACTORIALS[9])) == FDigits(i).num
     for i in range(10):
-        assert list(e.digits_gen(i)) == list(Digits(i).digits_gen())
+        assert list(e.digits_gen(i*e.FACTORIALS[9])) == list(FDigits(i).digits_gen())
     # check number representation
     for i in range(10):
-        assert Digits(i).value == i
+        assert FDigits(i).value == i * e.FACTORIALS[9]
     # check string representation
+    for i in range(30):
+        assert str(FDigits(i)) == str(i * e.FACTORIALS[9])
+
+
+def test_digits_next():
+    d = FDigits(0)
     for i in range(10):
-        assert str(Digits(i)) == str(i)
-    assert Digits(1).next().value == 2
-    assert Digits(2).next().value == 3
-    assert Digits(9).next().value == 11
-    assert Digits(10).next().value == 11
-    assert Digits(11).next().value == 12
-    assert Digits(12).next().value == 13
-    assert Digits(19).next().value == 22
-    assert Digits(29).next().value == 33
-    assert Digits(39).next().value == 44
-    assert Digits(49).next().value == 55
-    assert Digits(89).next().value == 99
-    assert Digits(99).next().value == 111
+        print(f'n={d.n}, value={d.value}')
+        d.next()
+    for i in range(1, 71):
+        print(i, e.sg(i))
+    assert False
 
-
-
-def test_digits_f():
-    assert e.f(Digits(342)) == e.f(342) == 32
-    assert e.f(Digits(5)) == 120
-    assert e.f(Digits(25)) == 122
-
-def test_sg_01():
+def test_sg_3():
     assert sg(1) == 1
     assert sg(2) == 2
     assert sg(3) == 5
@@ -88,5 +80,17 @@ def test_sg_01():
     assert sg(42) == 31
     assert sg(43) == 32
     assert sg(44) == 45
+    assert sg(45) == 46
+    assert sg(46) == 50
+    assert sg(47) == 66
+    assert sg(48) == 67
+    assert sg(49) == 71
+    assert sg(50) == 84
+    assert sg(51) == 89
+    assert sg(52) == 90
+    assert sg(53) == 114
+    assert sg(54) == 118
+
+
 
 

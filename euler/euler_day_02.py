@@ -235,10 +235,12 @@ def main():
 if __name__ == "__main__":
     DEBUG = True
     pgm_start = time.perf_counter()
-    nn = 55
+    nn = 70
     total = sum_sg(nn)
     pgm_stop = time.perf_counter()
     print(f"sum_sg({nn}) is {total} computed in {pgm_stop - pgm_start:.2f} seconds")
+    for i in range(1, 55):
+        print(f'assert sg({i}) == {sg(i)}')
     """
 For n = 1          sf(n) =  1. sg( 1) =  1. Time:   0.0000 seconds
 For n = 2          sf(n) =  2. sg( 2) =  2. Time:   0.0000 seconds
@@ -310,4 +312,58 @@ For n = 134445566668888888999999999999999999999999999999999999999999999999999999
 For n = 1223334444566666888999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 sf(n) = 68. sg(68) = 1574. Time: 527.3139 seconds
 For n = 12334566666688888888999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 sf(n) = 69. sg(69) = 1846. Time: 585.8830 seconds
 For n = 13444788889999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999 sf(n) = 70. sg(70) = 2035. Time: 427.1509 seconds
+assert sg(1) == 1
+assert sg(2) == 2
+assert sg(3) == 5
+assert sg(4) == 6
+assert sg(5) == 7
+assert sg(6) == 3
+assert sg(7) == 4
+assert sg(8) == 5
+assert sg(9) == 6
+assert sg(10) == 7
+assert sg(11) == 8
+assert sg(12) == 8
+assert sg(13) == 9
+assert sg(14) == 13
+assert sg(15) == 9
+assert sg(16) == 10
+assert sg(17) == 11
+assert sg(18) == 13
+assert sg(19) == 14
+assert sg(20) == 15
+assert sg(21) == 16
+assert sg(22) == 17
+assert sg(23) == 18
+assert sg(24) == 13
+assert sg(25) == 14
+assert sg(26) == 15
+assert sg(27) == 9
+assert sg(28) == 10
+assert sg(29) == 11
+assert sg(30) == 12
+assert sg(31) == 13
+assert sg(32) == 14
+assert sg(33) == 12
+assert sg(34) == 13
+assert sg(35) == 14
+assert sg(36) == 15
+assert sg(37) == 19
+assert sg(38) == 28
+assert sg(39) == 24
+assert sg(40) == 25
+assert sg(41) == 37
+assert sg(42) == 31
+assert sg(43) == 32
+assert sg(44) == 45
+assert sg(45) == 46
+assert sg(46) == 50
+assert sg(47) == 66
+assert sg(48) == 67
+assert sg(49) == 71
+assert sg(50) == 84
+assert sg(51) == 89
+assert sg(52) == 90
+assert sg(53) == 114
+assert sg(54) == 118    
     """

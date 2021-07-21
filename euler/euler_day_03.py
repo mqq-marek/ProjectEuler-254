@@ -32,7 +32,7 @@ def init_prefixes():
                                     f_ = f(prefix)
                                     # fs_ = digits_sum(f_)
                                     fs_ = sf(prefix)
-                                    PREFIXES[fs_].append(prefix)
+                                    PREFIXES[fs_ % 9].append(prefix)
     for k in PREFIXES.keys():
         PREFIXES[k].sort(key=lambda x: int(x))
 
@@ -100,9 +100,7 @@ class FDigits:
 
     def digits_sum(self):
         """
-        Sum of suffix only digits in  n.
-        Does not include 5 least significant digits and max 7 on the 6th least significant digits.
-        :return:
+        Sum of all digits.
         """
         return sum(self.num)
 
@@ -205,6 +203,13 @@ def f(n):
 sf_cache = {}
 
 
+def prefix_lt_prefix(prefix1, prefix2):
+    p1 = str(prefix1)
+    p2 = str(prefix2)
+    p_len = max(len(p1), len(p2))
+    return p1.ljust(p_len, '9') < p2.ljust(p_len, '9')
+
+
 def sf(n):
     """
     Compute sf(n) as the sum of the digits of f(n).
@@ -244,69 +249,125 @@ def g_sequence(max_i):
     :return: None
     """
 
-    def g_find(f_number, *, max_cnt=None):
+    def g_find_first(f_suffix):
         """
         Founds n such that sf(n) == i
-        :param f_number: suffix starting f(n) with n being suffix with f_number. n - 9 digits
-        :param max_cnt: optional limit early stop if n not found based on amount of '9' digits
-        :return: tuple <prefix value>, prefix len, suffix, len
-                    if not found returns None, None, max_cnt
+        :param f_suffix: start with n being '9' suffix length f_suffix.n
+        :return: prefix which form with suffix n such sf(n) == i
         """
         cost = 0
-        while max_cnt is None or f_number.n < max_cnt:
-            # exit in case of limit for amount of '9' digits in suffix
+        while True:
             cost += 1
-            f_sum = f_number.digits_sum()
+            f_sum = f_suffix.digits_sum()
             if f_sum == i:
                 # found sf(n) = i, where n contains only digits 9
                 if DEBUG:
-                    print(f'cost: {cost:12}, len={f_number.n:6}, g({i}) = 9*{f_number.n}')
+                    print(f'cost: {cost:12}, len={f_suffix.n:6}, g({i}) = 9*{f_suffix.n}')
                 return 0
 
             needed_prefix_sum = i - f_sum
-            prefix_part_sum = sum(f_number.num[0:6])
+            prefix_part_sum = sum(f_suffix.num[0:5])
             max_prefix_sum = 47 - prefix_part_sum
-            if max_prefix_sum < needed_prefix_sum or f_sum > i:
-                # print(f'Too small prefix for i={i}  with 9*{n_cnt} and missing digits sum={needed_prefix_sum}')
-                f_number.next()
+            if needed_prefix_sum > max_prefix_sum:
+                f_suffix.next()
                 continue
-
-            prefixes = PREFIXES.get(needed_prefix_sum, [])
+            prefixes = PREFIXES.get(needed_prefix_sum % 9, [])
+            suffix_value = f_suffix.value
             for prefix in prefixes:
                 cost += 1
-                if digits_sum(f_number.value + f(prefix)) == i:
+                if digits_sum(suffix_value + f(prefix)) == i:
                     if DEBUG:
                         print(
-                            f'cost: {cost:12}, len={len(str(prefix)) + f_number.n:6}, '
-                            f'g({i}) = {str(prefix)}+9*{f_number.n}')
+                            f'cost: {cost:12}, len={len(str(prefix)) + f_suffix.n:6}, '
+                            f'g({i}) = {str(prefix)}+9*{f_suffix.n}')
                     return prefix
             if prefixes:
                 pass
                 if DEBUG:
-                    print(f'Not found matched prefix for i={i} with 9*{f_number.n} '
+                    print(f'Not found matched prefix for i={i} with 9*{f_suffix.n} '
                           f'and missing digits sum={needed_prefix_sum}')
             else:
                 pass
                 if DEBUG:
-                    print(f'Missing prefix for i={i}  with 9*{f_number.n} and missing digits sum={needed_prefix_sum}')
-            f_number.next()
-        # Not found sf(n) = i when d9_counter < max_cnt
+                    print(f'Missing prefix for i={i}  with 9*{f_suffix.n} and missing digits sum={needed_prefix_sum}')
+            f_suffix.next()
+
+    def g_scan_next(f_suffix, *, max_cnt=None):
+        """
+        Founds next n such that sf(n) == i
+        :param f_suffix: start with n being '9' suffix length f_suffix.n
+        :param max_cnt: limit for stop scanning
+        :return: prefix which form with suffix n such sf(n) == i or None if not found
+        """
+        cost = 0
+        while f_suffix.n < max_cnt:
+            # exit in case of limit for amount of '9' digits in suffix
+            cost += 1
+            f_sum = f_suffix.digits_sum()
+            if f_sum == i:
+                # found sf(n) = i, where n contains only digits 9
+                if DEBUG:
+                    print(f'cost: {cost:12}, len={f_suffix.n:6}, g({i}) = 9*{f_suffix.n}')
+                return 0
+
+            needed_prefix_sum = i - f_sum
+            while needed_prefix_sum < 0:
+                needed_prefix_sum += 9
+            prefix_part_sum = sum(f_suffix.num[0:5])
+            max_prefix_sum = 47 - prefix_part_sum
+            # print(f'f_sum {f_sum}, f_prefix_part: {prefix_part_sum}, needed: {needed_prefix_sum}/{i-f_sum}, max_prefix_sum: {max_prefix_sum}')
+            if needed_prefix_sum > max_prefix_sum:
+                # print(f'Too small prefix for i={i}  with 9*{f_suffix.n} and missing digits sum={needed_prefix_sum}')
+                f_suffix.next()
+                continue
+            # print(i, f_suffix.value, needed_prefix_sum)
+            prefixes = PREFIXES.get(needed_prefix_sum % 9, [])
+            suffix_value = f_suffix.value
+            suffix_len = f_suffix.n
+            for prefix in prefixes:
+                cost += 1
+                # print(prefix, f(prefix))
+                if len(prefix) + suffix_len > max_cnt:
+                    break
+                if digits_sum(suffix_value + f(prefix)) == i:
+                    if DEBUG:
+                        print(
+                            f'cost: {cost:12}, len={len(str(prefix)) + f_suffix.n:6}, '
+                            f'g({i}) = {str(prefix)}+9*{f_suffix.n}')
+                    return prefix
+            if prefixes:
+                if DEBUG:
+                    pass
+                    # print(f'Not found matched prefix for i={i} with 9*{f_suffix.n} '
+                    #       f'and missing digits sum={needed_prefix_sum}')
+            else:
+                if DEBUG:
+                    pass
+                    # print(f'Missing prefix for i={i}  with 9*{f_suffix.n} and missing digits sum={needed_prefix_sum}')
+            f_suffix.next()
+        # Not found sf(n) = i
         return None
 
     suffix = FDigits(0)
     for i in range(1, max_i + 1):
         more_results = False
-        prefix = g_find(suffix)
+        prefix = g_find_first(suffix)
         current_len = len(str(prefix)) + suffix.n
         current_suffix = FDigits(suffix)
         suffix.next()
         while suffix.n <= current_len:
-            tmp_prefix = g_find(suffix, max_cnt=current_len)
+            # print(f'TryNext {suffix.n}, {current_len}')
+            tmp_prefix = g_scan_next(suffix, max_cnt=current_len)
             if tmp_prefix is not None:
                 more_results = True
                 tmp_len = len(str(tmp_prefix)) + suffix.n
-                if tmp_len < current_len:
+                '''
+                print(f'curlen {current_len}, tmp len {tmp_len}, prefix {prefix}, tmp_prefix {tmp_prefix}, '
+                      f'compare {prefix_lt_prefix(tmp_prefix, prefix)}')
+                '''
+                if (tmp_len < current_len) or (tmp_len == current_len and prefix_lt_prefix(tmp_prefix, prefix)):
                     prefix = tmp_prefix
+                    current_len = tmp_len
                     current_suffix = FDigits(suffix)
             suffix.next()
 
@@ -314,7 +375,7 @@ def g_sequence(max_i):
         sf_cache[i] = digits_sum(prefix) + 9 * current_suffix.n
         if more_results and DEBUG:
             print(f'Best result for i={i} is {str(prefix)}+9*{current_suffix.n}')
-        suffix = current_suffix
+        suffix = FDigits(max(0, current_suffix.n-10))
     return sf_cache
 
 
@@ -353,7 +414,8 @@ def sum_sg(n):
 
 
 if __name__ == "__main__":
-    DEBUG = False
+    DEBUG = True
+    print(FACTORIALS)
     init_prefixes()
     '''
     pgm_start = time.perf_counter()
@@ -362,8 +424,62 @@ if __name__ == "__main__":
     print(f"Init prefixes - {pgm_stop - pgm_start:.2f} seconds")
     '''
     pgm_start = time.perf_counter()
-    nn = 2000
+    nn = 55
     total = sum_sg(nn)
+    assert sg(1) == 1
+    assert sg(2) == 2
+    assert sg(3) == 5
+    assert sg(4) == 6
+    assert sg(5) == 7
+    assert sg(6) == 3
+    assert sg(7) == 4
+    assert sg(8) == 5
+    assert sg(9) == 6
+    assert sg(10) == 7
+    assert sg(11) == 8
+    assert sg(12) == 8
+    assert sg(13) == 9
+    assert sg(14) == 13
+    assert sg(15) == 9
+    assert sg(16) == 10
+    assert sg(17) == 11
+    assert sg(18) == 13
+    assert sg(19) == 14
+    assert sg(20) == 15
+    assert sg(21) == 16
+    assert sg(22) == 17
+    assert sg(23) == 18
+    assert sg(24) == 13
+    assert sg(25) == 14
+    assert sg(26) == 15
+    assert sg(27) == 9
+    assert sg(28) == 10
+    assert sg(29) == 11
+    assert sg(30) == 12
+    assert sg(31) == 13
+    assert sg(32) == 14
+    assert sg(33) == 12
+    assert sg(34) == 13
+    assert sg(35) == 14
+    assert sg(36) == 15
+    assert sg(37) == 19
+    assert sg(38) == 28
+    assert sg(39) == 24
+    assert sg(40) == 25
+    assert sg(41) == 37
+    assert sg(42) == 31
+    assert sg(43) == 32
+    assert sg(44) == 45
+    assert sg(45) == 46
+    assert sg(46) == 50
+    assert sg(47) == 66
+    assert sg(48) == 67
+    assert sg(49) == 71
+    assert sg(50) == 84
+    assert sg(51) == 89
+    assert sg(52) == 90
+    assert sg(53) == 114
+    assert sg(54) == 118
     pgm_stop = time.perf_counter()
     print(f"sum_sg({nn}) is {total} computed in {pgm_stop - pgm_start:.2f} seconds")
     """
