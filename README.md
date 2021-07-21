@@ -695,36 +695,6 @@ computed in 68.24 seconds
 
 
 
-  
-
-
-
-
-
-There are maximum 9! prefixes with max length 36 digits.
-
-So now algorithm for finding next prospect n (method next in class Digits) 
-such that g(i)=i can work in the following way:
-- let's split current n into prefix
-Lets assume we have current number n having length k:
-- with prefix length l (0<=l<=k))
-- suffix (digits 9) length k-l (0<=k-l<=k)
-
-So now we cun build all k-digits numbers in the following way:
-- Let's l = min(36, k)
--Take all l digits prefixes filled with k-l digits 9 at the end
--Take all l-1 digits prefixes filled with k-l+1 digits 9 at the end
-...
--Take 1 digit prefixes  filled with k-1 digits 9 at the end
--Take k digits 9
-- Process numbers by num,ber from such list (numbers are not in increasing order)
-- after processing all numbers with length k, start with numbers with length k+1 digits.
-in the following way:
-
-
-
-
-
 
 
 
