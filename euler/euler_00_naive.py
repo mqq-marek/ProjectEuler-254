@@ -1,7 +1,7 @@
 """
 Euler challenge from HackerRank https://www.hackerrank.com/contests/projecteuler/challenges/euler254/problem
 
-Initial design
+Initial design - Day 0
 
 """
 import math

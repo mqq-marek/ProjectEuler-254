@@ -1,9 +1,10 @@
 """
 Euler challenge from HackerRank https://www.hackerrank.com/contests/projecteuler/challenges/euler254/problem
 
-Simple optimizations
+Speed improvement in f(n) guessing - Day 3
 
 """
+import cProfile, pstats, io
 import math
 import time
 from collections import defaultdict
@@ -13,6 +14,7 @@ from itertools import combinations
 DEBUG = False
 
 PREFIXES = defaultdict(list)
+F_PREFIX = {}
 
 
 def init_prefixes():
@@ -30,8 +32,8 @@ def init_prefixes():
                                     prefix = ('1' * i1 + '2' * i2 + '3' * i3 + '4' * i4 +
                                               '5' * i5 + '6' * i6 + '7' * i7 + '8' * i8)
                                     f_ = f(prefix)
-                                    # fs_ = digits_sum(f_)
                                     fs_ = sf(prefix)
+                                    F_PREFIX[prefix] = f_
                                     PREFIXES[fs_ % 9].append(prefix)
     for k in PREFIXES.keys():
         PREFIXES[k].sort(key=lambda x: int(x))
@@ -51,12 +53,6 @@ def digits_gen(n):
         n //= 10
         if not n:
             break
-
-
-def single_digit_sum(n):
-    while (n := digits_sum(n)) > 9:
-        pass
-    return n
 
 
 def digits_sum(n):
@@ -221,7 +217,6 @@ def sf(n):
     :return: sum digits of f(n)
     """
     sf_ = digits_sum(f(n))
-    sf_cache.setdefault(sf_, str(n))
     return sf_
 
 
@@ -238,7 +233,7 @@ def g(i):
     return int(sf_cache[i])
 
 
-def g_sequence(max_i):
+def g_sequence(max_i, *, mod=None):
     """
     Looks for g(i) in range 1..max_i
     Define g(i) to be the smallest positive integer n such that sf(n) == i.
@@ -275,21 +270,21 @@ def g_sequence(max_i):
             suffix_value = f_suffix.value
             for prefix in prefixes:
                 cost += 1
-                if digits_sum(suffix_value + f(prefix)) == i:
+                if digits_sum(suffix_value + F_PREFIX[prefix]) == i:
                     if DEBUG:
                         print(
                             f'cost: {cost:12}, len={len(str(prefix)) + f_suffix.n:6}, '
                             f'g({i}) = {str(prefix)}+9*{f_suffix.n}')
                     return prefix
             if prefixes:
-                pass
                 if DEBUG:
-                    print(f'Not found matched prefix for i={i} with 9*{f_suffix.n} '
-                          f'and missing digits sum={needed_prefix_sum}')
+                    pass
+                    # print(f'Not found matched prefix for i={i} with 9*{f_suffix.n} '
+                    #       f'and missing digits sum={needed_prefix_sum}')
             else:
-                pass
                 if DEBUG:
-                    print(f'Missing prefix for i={i}  with 9*{f_suffix.n} and missing digits sum={needed_prefix_sum}')
+                    pass
+                    # print(f'Missing prefix for i={i}  with 9*{f_suffix.n} and missing digits sum={needed_prefix_sum}')
             f_suffix.next()
 
     def g_scan_next(f_suffix, *, max_cnt=None):
@@ -329,7 +324,7 @@ def g_sequence(max_i):
                 # print(prefix, f(prefix))
                 if len(prefix) + suffix_len > max_cnt:
                     break
-                if digits_sum(suffix_value + f(prefix)) == i:
+                if digits_sum(suffix_value + F_PREFIX[prefix]) == i:
                     if DEBUG:
                         print(
                             f'cost: {cost:12}, len={len(str(prefix)) + f_suffix.n:6}, '
@@ -373,6 +368,8 @@ def g_sequence(max_i):
 
         # sf_cache[i] = str(prefix) + '9' * current_suffix.n
         sf_cache[i] = digits_sum(prefix) + 9 * current_suffix.n
+        if mod:
+            sf_cache[i] = sf_cache[i] % mod
         if more_results and DEBUG:
             print(f'Best result for i={i} is {str(prefix)}+9*{current_suffix.n}')
         suffix = FDigits(max(0, current_suffix.n-10))
@@ -392,14 +389,48 @@ def sg(i):
 
 
 def sum_sg_mod(n, m):
-    g_sequence(n)
+    g_sequence(n, mod=m)
     s = 0
     for i in range(1, n + 1):
         s = (s + sg(i)) % m
     return s
 
 
-def main():
+def sum_sg(n):
+    g_sequence(n)
+    return sum([sg(i) for i in range(1, n + 1)])
+
+
+def assert_sg():
+    sg_table = [1, 2, 5, 6, 7, 3, 4, 5, 6, 7, 8, 8, 9, 13, 9, 10, 11, 13, 14, 15, 16, 17, 18, 13, 14, 15, 9, 10,
+                11, 12, 13, 14, 12, 13, 14, 15, 19, 28, 24, 25, 37, 31, 32, 45, 46, 50, 66, 67, 71, 84, 89, 90, 114,
+                118, 134, 154, 158, 193, 231, 235, 247, 317, 321, 545, 843, 1052, 1339, 1574, 2034, 2035, 2294, 2566,
+                5035, 7578, 9997, 14937, 15009, 17415, 19912, 22416, 24933, 49686, 74498, 121603, 124135, 148899,
+                173672, 220757, 223324, 248145, 496173, 967389, 992162, 1240190, 1711406, 1736179, 1984255, 2455447,
+                2480268, 4960419, 7440581, 9920765, 14856251, 14881015, 17361186, 19841385, 22321571, 47123166,
+                71924693, 74404903, 99206450, 124008025, 148809646, 173611193, 198412768, 223214413, 248015925,
+                496031816, 744047718, 1215277860, 1240079422, 1488095324, 1736111200, 1984127056, 2232142919,
+                2480158795, 4960317556, 7440476328, 12375992162, 12400793737, 14880952509, 17361111207,
+                22296627021, 22321428666, 24801587412, 49603174707, 74404761998, 99206349313, 146329365162,
+                148809523899, 173611111214, 198412698494, 223214285824, 471230158816, 719246031823, 967261904889,
+                1215277777881, 1463293650888, 1711309523906, 1959325396898, 2207341269905, 2455357142947,
+                4712301587433, 4960317460440, 7440476190581, 9920634920744, 12400793650874, 14880952381015,
+                17361111111165, 22073412698529, 22321428571571, 24801587301686, 49603174603275, 74404761904903,
+                99206349206429, 146329365079457, 148809523809646, 173611111111172, 198412698412789, 223214285714413,
+                471230158730268, 496031746031837, 744047619047718, 992063492063573, 1240079365079443,
+                1488095238095324, 1736111111111179, 1984126984127014, 2232142857142919, 4935515873015925,
+                4960317460317577, 7440476190476328, 9920634920635018, 12400793650793758, 14880952380952509,
+                17361111111111186, 19841269841269891, 22321428571428666, 24801587301587391, 49603174603174665,
+                74404761904761998, 99206349206349292, 124007936507936614, 148809523809523899, 173611111111111193,
+                198412698412698515, 223214285714285824, 248015873015873166, 496031746031746152, 967261904761904889]
+
+    for i, sg_sum in enumerate(sg_table, 1):
+        if sf_cache.get(i):
+            assert sf_cache[i] == sg_sum
+
+
+def hacker_main():
+    init_prefixes()
     q = int(input())
     for _ in range(q):
         n, m = map(int, input().split())
@@ -407,81 +438,41 @@ def main():
         print(r)
 
 
-def sum_sg(n):
-    g_sequence(n)
-    # print(sf_cache)
-    return sum([sg(i) for i in range(1, n + 1)])
+def profile_main(size=200):
+    with cProfile.Profile() as pr:
+        init_prefixes()
+        sum_sg(size)
+
+    s = io.StringIO()
+    sort_by = pstats.SortKey.CUMULATIVE
+    ps = pstats.Stats(pr, stream=s).sort_stats('tottime')
+    ps.print_stats()
+    print(s.getvalue())
+
+
+def development_main(size=200):
+    pgm_start = time.perf_counter()
+    init_prefixes()
+    print(FACTORIALS)
+    pgm_stop = time.perf_counter()
+    print(f"Init prefixes - {pgm_stop - pgm_start:.2f} seconds")
+    total = sum_sg(size)
+    pgm_stop = time.perf_counter()
+    print(f"sum_sg({size}) is {total} computed in {pgm_stop - pgm_start:.2f} seconds")
+    assert_sg()
+    # print computed sg values
+    # sg_list = [sg(i) for i in range(1, size+1)]
+    # print(sg_list)
 
 
 if __name__ == "__main__":
-    DEBUG = True
-    print(FACTORIALS)
-    init_prefixes()
-    '''
-    pgm_start = time.perf_counter()
-    init_prefixes()
-    pgm_stop = time.perf_counter()
-    print(f"Init prefixes - {pgm_stop - pgm_start:.2f} seconds")
-    '''
-    pgm_start = time.perf_counter()
-    nn = 55
-    total = sum_sg(nn)
-    assert sg(1) == 1
-    assert sg(2) == 2
-    assert sg(3) == 5
-    assert sg(4) == 6
-    assert sg(5) == 7
-    assert sg(6) == 3
-    assert sg(7) == 4
-    assert sg(8) == 5
-    assert sg(9) == 6
-    assert sg(10) == 7
-    assert sg(11) == 8
-    assert sg(12) == 8
-    assert sg(13) == 9
-    assert sg(14) == 13
-    assert sg(15) == 9
-    assert sg(16) == 10
-    assert sg(17) == 11
-    assert sg(18) == 13
-    assert sg(19) == 14
-    assert sg(20) == 15
-    assert sg(21) == 16
-    assert sg(22) == 17
-    assert sg(23) == 18
-    assert sg(24) == 13
-    assert sg(25) == 14
-    assert sg(26) == 15
-    assert sg(27) == 9
-    assert sg(28) == 10
-    assert sg(29) == 11
-    assert sg(30) == 12
-    assert sg(31) == 13
-    assert sg(32) == 14
-    assert sg(33) == 12
-    assert sg(34) == 13
-    assert sg(35) == 14
-    assert sg(36) == 15
-    assert sg(37) == 19
-    assert sg(38) == 28
-    assert sg(39) == 24
-    assert sg(40) == 25
-    assert sg(41) == 37
-    assert sg(42) == 31
-    assert sg(43) == 32
-    assert sg(44) == 45
-    assert sg(45) == 46
-    assert sg(46) == 50
-    assert sg(47) == 66
-    assert sg(48) == 67
-    assert sg(49) == 71
-    assert sg(50) == 84
-    assert sg(51) == 89
-    assert sg(52) == 90
-    assert sg(53) == 114
-    assert sg(54) == 118
-    pgm_stop = time.perf_counter()
-    print(f"sum_sg({nn}) is {total} computed in {pgm_stop - pgm_start:.2f} seconds")
+    DEBUG = False
+    # hacker_main()
+    # profile_main(100)
+    development_main(20)
+    exit()
+
+
     """
 Factorials[0..9] = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880]
 3 ['5', '12', '33', '34', '577', '3477', '12333', '34444', '55556', '56666', '334455', '345556', '567777', '1233377', '1234445', '1244556', '3334445', '3334556', '3344556', '12334444', '55556677', '123335556', '334455677', '577777788', '1234445677', '3334445677', '33445555566', '55556777788', '123444555566', '333444555566', '334455777788', '566666677788', '1234445777788', '3334445777788', '3466666677788', '55556666788888', '555566666677777', '1233366666677788', '1244555556666667', '3334555556666667', '3344555556666667', '55556667778888888', '334455555666666777', '555566666777777788', '566666677777778888', '1234445555666666777', '1244555556666677788', '3334445555666666777', '3334555556666677788', '3344555556666677788', '334455555666667777788', '1234445555666667777788', '3334445555666667777788', '334455555666677777778888', '1234445555666677777778888', '3334445555666677777778888']

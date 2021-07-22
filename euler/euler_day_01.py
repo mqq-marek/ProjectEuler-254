@@ -1,7 +1,7 @@
 """
 Euler challenge from HackerRank https://www.hackerrank.com/contests/projecteuler/challenges/euler254/problem
 
-Simple optimizations
+Simple optimizations - Day 1
 
 """
 import math

@@ -1,7 +1,7 @@
 """
 Euler challenge from HackerRank https://www.hackerrank.com/contests/projecteuler/challenges/euler254/problem
 
-Simple optimizations
+Speed improvement - Day 2
 
 """
 import math
@@ -235,11 +235,11 @@ def main():
 if __name__ == "__main__":
     DEBUG = True
     pgm_start = time.perf_counter()
-    nn = 70
+    nn = 65
     total = sum_sg(nn)
     pgm_stop = time.perf_counter()
     print(f"sum_sg({nn}) is {total} computed in {pgm_stop - pgm_start:.2f} seconds")
-    for i in range(1, 55):
+    for i in range(1, 66):
         print(f'assert sg({i}) == {sg(i)}')
     """
 For n = 1          sf(n) =  1. sg( 1) =  1. Time:   0.0000 seconds

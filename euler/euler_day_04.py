@@ -1,9 +1,10 @@
 """
 Euler challenge from HackerRank https://www.hackerrank.com/contests/projecteuler/challenges/euler254/problem
 
-Speed improvement in f(n) guessing - Day 3
+Simple optimizations
 
 """
+import cProfile, pstats, io
 import math
 import time
 from collections import defaultdict
@@ -415,20 +416,32 @@ def run_code():
     init_prefixes()
     total = sum_sg(500)
 
+def profile():
+    with cProfile.Profile() as pr:
+        run_code()
+
+    s = io.StringIO()
+    sort_by = pstats.SortKey.CUMULATIVE
+    ps = pstats.Stats(pr, stream=s).sort_stats(sort_by)
+    ps.print_stats()
+    print(s.getvalue())
+    exit()
+
 
 if __name__ == "__main__":
     DEBUG = False
+    profile()
+    init_prefixes()
+    print(FACTORIALS)
+    '''
     pgm_start = time.perf_counter()
     init_prefixes()
     pgm_stop = time.perf_counter()
     print(f"Init prefixes - {pgm_stop - pgm_start:.2f} seconds")
+    '''
+    pgm_start = time.perf_counter()
     nn = 100
     total = sum_sg(nn)
-    #main()
-    pgm_stop = time.perf_counter()
-    print(f"sum_sg({nn}) is {total} computed in {pgm_stop - pgm_start:.2f} seconds")
-    exit()
-
     '''
     assert sg(1) == 1
     assert sg(2) == 2
