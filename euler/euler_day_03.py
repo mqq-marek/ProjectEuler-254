@@ -15,6 +15,10 @@ DEBUG = False
 
 PREFIXES = defaultdict(list)
 F_PREFIX = {}
+# f_cache = {}
+# sf_cache = {}
+# g_cache = {}
+sg_cache = {}
 
 
 def init_prefixes():
@@ -81,9 +85,7 @@ class FDigits:
         else:
             self.num = number.num[:]
             self.n = number.n
-        self.suffix = self.num[:]
         self.sum = self.suffix_digits_sum()
-        self.prefix = [0]
 
     def __str__(self):
         """ Return number value as str """
@@ -110,7 +112,7 @@ class FDigits:
         suffix_sum += sum(self.num[6:])
         return suffix_sum
 
-    def next(self):
+    def next(self, sum_needed):
         """
         Finds next suffix with the same or greater suffix_digit_sum
         """
@@ -126,10 +128,6 @@ class FDigits:
             inc = min(need, max_digit - digit)
             return need - inc, digit + inc
 
-        def revert_suffix():
-            self.num = self.suffix[:]
-            assert self.sum == self.suffix_digits_sum()
-
         def update_value(inc_sum):
             # inc_sum = max(0, self.sum - self.suffix_digits_sum())
             # try to increase digit po position 5 up to 7
@@ -140,37 +138,44 @@ class FDigits:
                     return 0
             return inc_sum
 
-        def next_value_with_sum(sum_needed):
-            still_needed = sum_needed - self.suffix_digits_sum()
+        def next_value_with_sum(needed):
+            still_needed = needed - self.suffix_digits_sum()
             while still_needed > 0:
-                still_needed = update_value(sum_needed - suffix_sum)
+                old_needed = still_needed
+                still_needed = update_value(still_needed)
+                # print(f'Needed: {old_needed} gives: {self.value} missing: {still_needed}')
                 if still_needed:
                     self.num.append(1)
                     for i in range(0, len(self.num) - 1):
                         self.num[i] = 0
-                    still_needed = sum_needed - 1
+                    still_needed = needed - self.suffix_digits_sum()
+                    # print(f'Needed: {old_needed} gives: {self.value} missing: {still_needed}')
 
         def make_suffix_value():
             current_value = self.value
-            reminder = current_value % FACTORIALS[9]
-            if reminder:
-                self.num = list(digits_gen(current_value + FACTORIALS[9] - reminder))
+            self.n = max(self.n + 1, current_value // FACTORIALS[9])
+            self.num = list(digits_gen(self.n * FACTORIALS[9]))
             return self.suffix_digits_sum()
 
         # Get next suffix value [one 9 digit more so sum is increase by 9!]
         next_value = self.value + FACTORIALS[9]
+        self.n += 1
         self.num = list(digits_gen(next_value))
         suffix_sum = self.suffix_digits_sum()
+        if DEBUG:
+            pass
+            # print(f'Suffix: len:{self.n}, sum: {self.digits_sum()}, s_sum:{suffix_sum}, {self.value}')
 
-        while suffix_sum < self.sum:
-            next_value_with_sum(self.sum)
+        while suffix_sum < sum_needed-47:
+            next_value_with_sum(sum_needed-47)
             suffix_sum = make_suffix_value()
+            if DEBUG:
+                pass
+                # print(f'Suffix: len:{self.n}, sum: {self.digits_sum()}, s_sum:{suffix_sum}, {self.value}')
 
         self.sum = suffix_sum
-        self.suffix = self.num[:]
         assert self.value % FACTORIALS[9] == 0
         self.n = self.value // FACTORIALS[9]
-        self.prefix = [0]
 
     def digits_gen(self):
         """"  Number digits generator """
@@ -195,8 +200,6 @@ def f(n):
     else:
         return sum([FACTORIALS[d] for d in n.digits_gen()])
 
-
-sf_cache = {}
 
 
 def prefix_lt_prefix(prefix1, prefix2):
@@ -228,9 +231,9 @@ def g(i):
     :param i: number
     :return: smallest n such that sf(n) == i
     """
-    if sf_cache.get(i) is None:
+    if sg_cache.get(i) is None:
         g_sequence(i)
-    return int(sf_cache[i])
+    return int(sg_cache[i])
 
 
 def g_sequence(max_i, *, mod=None):
@@ -264,7 +267,7 @@ def g_sequence(max_i, *, mod=None):
             prefix_part_sum = sum(f_suffix.num[0:5])
             max_prefix_sum = 47 - prefix_part_sum
             if needed_prefix_sum > max_prefix_sum:
-                f_suffix.next()
+                f_suffix.next(i)
                 continue
             prefixes = PREFIXES.get(needed_prefix_sum % 9, [])
             suffix_value = f_suffix.value
@@ -285,7 +288,7 @@ def g_sequence(max_i, *, mod=None):
                 if DEBUG:
                     pass
                     # print(f'Missing prefix for i={i}  with 9*{f_suffix.n} and missing digits sum={needed_prefix_sum}')
-            f_suffix.next()
+            f_suffix.next(i)
 
     def g_scan_next(f_suffix, *, max_cnt=None):
         """
@@ -313,7 +316,7 @@ def g_sequence(max_i, *, mod=None):
             # print(f'f_sum {f_sum}, f_prefix_part: {prefix_part_sum}, needed: {needed_prefix_sum}/{i-f_sum}, max_prefix_sum: {max_prefix_sum}')
             if needed_prefix_sum > max_prefix_sum:
                 # print(f'Too small prefix for i={i}  with 9*{f_suffix.n} and missing digits sum={needed_prefix_sum}')
-                f_suffix.next()
+                f_suffix.next(i)
                 continue
             # print(i, f_suffix.value, needed_prefix_sum)
             prefixes = PREFIXES.get(needed_prefix_sum % 9, [])
@@ -339,17 +342,21 @@ def g_sequence(max_i, *, mod=None):
                 if DEBUG:
                     pass
                     # print(f'Missing prefix for i={i}  with 9*{f_suffix.n} and missing digits sum={needed_prefix_sum}')
-            f_suffix.next()
+            f_suffix.next(i)
         # Not found sf(n) = i
         return None
 
     suffix = FDigits(0)
     for i in range(1, max_i + 1):
+        if DEBUG:
+            print(f'G({i}) starts with suffix len {suffix.n}')
+        if sg_cache.get(i):
+            continue
         more_results = False
         prefix = g_find_first(suffix)
         current_len = len(str(prefix)) + suffix.n
         current_suffix = FDigits(suffix)
-        suffix.next()
+        suffix.next(i)
         while suffix.n <= current_len:
             # print(f'TryNext {suffix.n}, {current_len}')
             tmp_prefix = g_scan_next(suffix, max_cnt=current_len)
@@ -364,16 +371,16 @@ def g_sequence(max_i, *, mod=None):
                     prefix = tmp_prefix
                     current_len = tmp_len
                     current_suffix = FDigits(suffix)
-            suffix.next()
+            suffix.next(i)
 
         # sf_cache[i] = str(prefix) + '9' * current_suffix.n
-        sf_cache[i] = digits_sum(prefix) + 9 * current_suffix.n
+        sg_cache[i] = digits_sum(prefix) + 9 * current_suffix.n
         if mod:
-            sf_cache[i] = sf_cache[i] % mod
+            sg_cache[i] = sg_cache[i] % mod
         if more_results and DEBUG:
             print(f'Best result for i={i} is {str(prefix)}+9*{current_suffix.n}')
         suffix = FDigits(max(0, current_suffix.n-10))
-    return sf_cache
+    return sg_cache
 
 
 def sg(i):
@@ -383,9 +390,9 @@ def sg(i):
     :param i:
     :return: sum digits of g(i)
     """
-    if sf_cache.get(i) is None:
+    if sg_cache.get(i) is None:
         g_sequence(i)
-    return int(sf_cache[i])
+    return int(sg_cache[i])
 
 
 def sum_sg_mod(n, m):
@@ -425,8 +432,8 @@ def assert_sg():
                 198412698412698515, 223214285714285824, 248015873015873166, 496031746031746152, 967261904761904889]
 
     for i, sg_sum in enumerate(sg_table, 1):
-        if sf_cache.get(i):
-            assert sf_cache[i] == sg_sum
+        if sg_cache.get(i) and sg_cache.get(i) != sg_sum:
+            print(f'Assertion error sg({i}) is {sg_cache.get(i, 0)} while expected {sg_sum}')
 
 
 def hacker_main():
@@ -466,10 +473,10 @@ def development_main(size=200):
 
 
 if __name__ == "__main__":
-    DEBUG = False
+    # DEBUG = True
     # hacker_main()
     # profile_main(100)
-    development_main(20)
+    development_main(200)
     exit()
 
 
