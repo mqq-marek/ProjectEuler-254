@@ -79,7 +79,7 @@ def find_fn(digits_sum):
         i = int(i_str)
         n9 = i // FACTORIALS[9]
         distance = i - n9 * FACTORIALS[9]
-        if distance <= 299999:
+        if PREFIX_V.get(distance):
             return i_str, n9, distance
             cost = 0
     raise Exception('fn not found')
@@ -158,13 +158,21 @@ class FDigits:
             total += 1
         return total
 
+
+    def prefix_digits_sum(self):
+        """
+        Sum of prefix part digit.
+        """
+        suffix_sum = sum(self.num[:6])
+        return suffix_sum
+
     def suffix_digits_sum(self):
         """
         Sum of suffix only digits in  n.
         Does not include 5 least significant digits and max 7 on the 6th least significant digits.
         :return:
         """
-        suffix_sum = min(7, sum(self.num[5:6])) + self.suffix6_digits_sum()
+        suffix_sum = self.suffix6_digits_sum()
         return suffix_sum
 
     def suffix6_digits_sum(self):
@@ -208,63 +216,55 @@ class FDigits:
             inc = min(need, max_digit - digit)
             return need - inc, digit + inc
 
-        def update_value(need_digits_sum):
-            """ Increase digits in number for reaching needed digits sum value. """
-            # try to increase digit po position 5 up to 7
-            # need_digits_sum, self.num[5] = increase_digit(need_digits_sum, self.num[5], max_digit=7)
-            # increase other digits up to 9 if necessary
-            max_digit = 7
-            for i in range(5, len(self.num)):
-                inc = min(need_digits_sum, max_digit - self.num[i])
-                max_digit = 9
-                # need_digits_sum, self.num[i] = increase_digit(need_digits_sum, self.num[i])
-                need_digits_sum, self.num[i] = need_digits_sum - inc, self.num[i] + inc
-                if need_digits_sum == 0:
+        def update_value(inc_sum):
+            for i in range(6, len(self.num)):
+                inc_sum, self.num[i] = increase_digit(inc_sum, self.num[i])
+                if inc_sum == 0:
                     return 0
-            return need_digits_sum
+            return inc_sum
 
-        def next_value_with_sum(needed):
-            """ Find next number value with needed suffix sum. """
+        def get_value_with_sum(needed):
             still_needed = needed - self.suffix_digits_sum()
             while still_needed > 0:
                 still_needed = update_value(still_needed)
                 if still_needed:
-                    # increase number length if not fulfill with the current number length
                     self.num.append(1)
-                    for i in range(0, len(self.num) - 1):
+                    for i in range(6, len(self.num) - 1):
                         self.num[i] = 0
-                    still_needed = needed - self.suffix_digits_sum()
-                    # print(f'Needed: {old_needed} gives: {self.value} missing: {still_needed}')
+                    still_needed = needed - 1
 
         def make_suffix_value():
-            """ Round value up to next 9! multiply. """
-            self.n = max(self.n + 1, self.value // FACTORIALS[9])
+            for i in range(0, 6):
+                self.num[i] = 0
+            # defensive check - try all possible values for prefix in a few passes
+            current_value = self.value  # + 1000000 - FACTORIALS[9]
+            # increase n for passing for all possible FACTORIALS[9] with requested suffix digits amount
+            self.n = max(self.n + 1, current_value // FACTORIALS[9])
             self.num = list(digits_gen(self.n * FACTORIALS[9]))
             return self.suffix_digits_sum()
 
-        # Get next suffix value [one 9 digit more so sum is increase by 9!]
-        self.add(FACTORIAL9_DIGITS)
-        # self.add2(FACTORIALS[9])
+        # Get next suffix value [every 9 digit increase value by 9!]
+        next_value = self.value + FACTORIALS[9]
         self.n += 1
+        self.num = list(digits_gen(next_value))
         suffix_sum = self.suffix_digits_sum()
-        if DEBUG:
-            pass
-            # print(f'Suffix: len:{self.n}, sum: {self.digits_sum()}, s_sum:{suffix_sum}, {self.value}')
 
-        while suffix_sum < sum_needed - 47:
-            next_value_with_sum(sum_needed - 47)
+        # if increase does not give requested amount of digits, try next value
+        while suffix_sum < sum_needed - 54:
+            get_value_with_sum(sum_needed - 54)
             suffix_sum = make_suffix_value()
-            if DEBUG:
-                pass
-                # print(f'Suffix: len:{self.n}, sum: {self.digits_sum()}, s_sum:{suffix_sum}, {self.value}')
 
         self.sum = suffix_sum
         assert self.value % FACTORIALS[9] == 0
+        if DEBUG:
+            pass
+            # print(f"FDigit.next({sum_needed}) => '9'*{self.n}, f_: {self.value} sf_(suffix): {self.sum}")
 
     def digits_gen(self):
         """"  Number digits generator """
         for d in self.num:
             yield d
+
 
 
 def f(n):
@@ -351,42 +351,31 @@ def g_sequence(max_i, *, mod=None):
                 return 0
 
             needed_prefix_sum = i - f_sum
-            prefix_part_sum = sum(f_suffix.num[0:5])
-            max_prefix_sum = 47 - prefix_part_sum
+            prefix_part_sum = f_suffix.prefix_digits_sum()
+            max_prefix_sum = 54 - prefix_part_sum
             if needed_prefix_sum > max_prefix_sum:
                 f_suffix.next(i)
                 continue
             suffix6_sum = f_suffix.suffix6_digits_sum()
-            if i - suffix6_sum == 54:
+            if (i - suffix6_sum == 54 and
+                    PREFIX_V.get(f_suffix.missing_prefix())):
                 if DEBUG:
                     print(f'cost: {-1:12}, '
                           f'f(n)={f_suffix.value + f_suffix.missing_prefix(): 40}, '
                           f'len={len(PREFIX_V[f_suffix.missing_prefix()]) + f_suffix.n:8}, '
                           f'g({i:5})={PREFIX_V[f_suffix.missing_prefix()]}+9*{f_suffix.n}')
                 return PREFIX_V[f_suffix.missing_prefix()]
-            prefixes = PREFIX_INFO.get(needed_prefix_sum % 9, [])
-            # suffix_value = f_suffix.value
 
+            prefixes = PREFIX_INFO.get(needed_prefix_sum % 9, [])
             for prefix in prefixes:
                 cost += 1
-                # if digits_sum(suffix_value + F_PREFIX[prefix]) == i:
                 if f_suffix.combined_digits_sum(prefix[1], suffix6_sum) == i:
-                    # print(i, i-suffix6_sum, prefix[0])
                     if DEBUG:
                         print(f'cost: {cost:12}, '
                               f'f(n)={f_suffix.value + f(prefix[0]): 40}, '
                               f'len={len(str(prefix[0])) + f_suffix.n:8}, '
                               f'g({i:5})={str(prefix[0])}+9*{f_suffix.n}')
                     return prefix[0]
-            if prefixes:
-                if DEBUG:
-                    pass
-                    # print(f'Not found matched prefix for i={i} with 9*{f_suffix.n} '
-                    #       f'and missing digits sum={needed_prefix_sum}')
-            else:
-                if DEBUG:
-                    pass
-                    # print(f'Missing prefix for i={i}  with 9*{f_suffix.n} and missing digits sum={needed_prefix_sum}')
             f_suffix.next(i)
 
     def g_scan_next(f_suffix, *, max_cnt=None):
@@ -413,23 +402,19 @@ def g_sequence(max_i, *, mod=None):
             needed_prefix_sum = i - f_sum
             while needed_prefix_sum < 0:
                 needed_prefix_sum += 9
-            prefix_part_sum = sum(f_suffix.num[0:5])
-            max_prefix_sum = 47 - prefix_part_sum
+            prefix_part_sum = f_suffix.prefix_digits_sum()
+            max_prefix_sum = 54 - prefix_part_sum
             if needed_prefix_sum > max_prefix_sum:
-                # print(f'Too small prefix for i={i}  with 9*{f_suffix.n} and missing digits sum={needed_prefix_sum}')
                 f_suffix.next(i)
                 continue
-            # print(i, f_suffix.value, needed_prefix_sum)
+
             prefixes = PREFIX_INFO.get(needed_prefix_sum % 9, [])
-            # suffix_value = f_suffix.value
             suffix6_sum = f_suffix.suffix6_digits_sum()
             suffix_len = f_suffix.n
             for prefix in prefixes:
                 cost += 1
-                # print(prefix, f(prefix))
                 if len(prefix[0]) + suffix_len > max_cnt:
                     break
-                # if digits_sum(suffix_value + F_PREFIX[prefix]) == i:
                 if f_suffix.combined_digits_sum(prefix[1], suffix6_sum) == i:
                     if DEBUG:
                         print(f'cost: {cost:12}, '
@@ -437,15 +422,6 @@ def g_sequence(max_i, *, mod=None):
                               f'len={len(str(prefix[0])) + f_suffix.n:8}, '
                               f'g({i:5})={str(prefix[0])}+9*{f_suffix.n}')
                     return prefix[0]
-            if prefixes:
-                if DEBUG:
-                    pass
-                    # print(f'Not found matched prefix for i={i} with 9*{f_suffix.n} '
-                    #       f'and missing digits sum={needed_prefix_sum}')
-            else:
-                if DEBUG:
-                    pass
-                    # print(f'Missing prefix for i={i}  with 9*{f_suffix.n} and missing digits sum={needed_prefix_sum}')
             f_suffix.next(i)
         # Not found sf(n) = i
         return None
@@ -457,12 +433,12 @@ def g_sequence(max_i, *, mod=None):
             # print(f'G({i}) starts with suffix len {suffix.n}')
         if sg_cache.get(i):
             continue
-        if i >= 70:
+        if i >= 65:
             fv, n9, d = find_fn(i)
             prefix = PREFIX_V[d]
             if DEBUG:
                 print(f'cost: {-2:12}, '
-                      f'f(n)={fv:40}, '
+                      f'f(n)={int(fv):40}, '
                       f'len={len(prefix) + n9:8}, '
                       f'g({i:5})={prefix}+9*{n9}')
             sg_cache[i] = digits_sum(int(prefix)) + 9 * n9
@@ -523,27 +499,28 @@ def sum_sg(n):
 
 
 def assert_sg(cache=None):
-    sg_table = [1, 2, 5, 6, 7, 3, 4, 5, 6, 7, 8, 8, 9, 13, 9, 10, 11, 13, 14, 15, 16, 17, 18, 13, 14, 15, 9, 10,
-                11, 12, 13, 14, 12, 13, 14, 15, 19, 28, 24, 25, 37, 31, 32, 45, 46, 50, 66, 67, 71, 84, 89, 90, 114,
-                118, 134, 154, 158, 193, 231, 235, 247, 317, 321, 545, 843, 1052, 1339, 1574, 2034, 2035, 2294, 2566,
-                5035, 7578, 9997, 14937, 15009, 17415, 19912, 22416, 24933, 49686, 74498, 121603, 124135, 148899,
-                173672, 220757, 223324, 248145, 496173, 967389, 992162, 1240190, 1711406, 1736179, 1984255, 2455447,
-                2480268, 4960419, 7440581, 9920765, 14856251, 14881015, 17361186, 19841385, 22321571, 47123166,
-                71924693, 74404903, 99206450, 124008025, 148809646, 173611193, 198412768, 223214413, 248015925,
-                496031816, 744047718, 1215277860, 1240079422, 1488095324, 1736111200, 1984127056, 2232142919,
-                2480158795, 4960317556, 7440476328, 12375992162, 12400793737, 14880952509, 17361111207,
-                22296627021, 22321428666, 24801587412, 49603174707, 74404761998, 99206349313, 146329365162,
-                148809523899, 173611111214, 198412698494, 223214285824, 471230158816, 719246031823, 967261904889,
-                1215277777881, 1463293650888, 1711309523906, 1959325396898, 2207341269905, 2455357142947,
-                4712301587433, 4960317460440, 7440476190581, 9920634920744, 12400793650874, 14880952381015,
-                17361111111165, 22073412698529, 22321428571571, 24801587301686, 49603174603275, 74404761904903,
-                99206349206429, 146329365079457, 148809523809646, 173611111111172, 198412698412789, 223214285714413,
-                471230158730268, 496031746031837, 744047619047718, 992063492063573, 1240079365079443,
-                1488095238095324, 1736111111111179, 1984126984127014, 2232142857142919, 4935515873015925,
-                4960317460317577, 7440476190476328, 9920634920635018, 12400793650793758, 14880952380952509,
-                17361111111111186, 19841269841269891, 22321428571428666, 24801587301587391, 49603174603174665,
-                74404761904761998, 99206349206349292, 124007936507936614, 148809523809523899, 173611111111111193,
-                198412698412698515, 223214285714285824, 248015873015873166, 496031746031746152, 967261904761904889]
+    sg_table = [1, 2, 5, 6, 7, 3, 4, 5, 6, 7, 8, 8, 9, 13, 9, 10, 11, 13, 14, 15, 16, 17, 18, 13, 14, 15, 9, 10, 11, 12,
+                13, 14, 12, 13, 14, 15, 19, 28, 24, 25, 37, 31, 32, 45, 46, 50, 66, 67, 71, 84, 89, 90, 114, 118, 134,
+                154, 158, 193, 231, 235, 247, 317, 321, 545, 843, 1052, 1339, 1574, 1846, 2035, 2294, 2566, 5035, 7578,
+                9997, 12529, 15009, 17415, 19912, 22416, 24933, 49686, 74498, 99334, 124135, 148899, 173672, 198536,
+                223324, 248145, 496173, 744212, 992162, 1240190, 1488229, 1736179, 1984255, 2232318, 2480268, 4960419,
+                7440581, 9920765, 12400916, 14881015, 17361186, 19841385, 22321571, 24801707, 49603317, 74404903,
+                99206450, 124008025, 148809646, 173611193, 198412768, 223214413, 248015925, 496031816, 744047718,
+                992063594, 1240079422, 1488095324, 1736111200, 1984127056, 2232142919, 2480158795, 4960317556,
+                7440476328, 9920635039, 12400793737, 14880952509, 17361111207, 19841269933, 22321428666, 24801587412,
+                49603174707, 74404761998, 99206349313, 124007936656, 148809523899, 173611111214, 198412698494,
+                223214285824, 248015873187, 496031746194, 744047619212, 992063492204, 1240079365211, 1488095238229,
+                1736111111221, 1984126984276, 2232142857318, 2480158730310, 4960317460440, 7440476190581, 9920634920744,
+                12400793650874, 14880952381015, 17361111111165, 19841269841406, 22321428571571, 24801587301686,
+                49603174603275, 74404761904903, 99206349206429, 124007936508046, 148809523809646, 173611111111172,
+                198412698412789, 223214285714413, 248015873015967, 496031746031837, 744047619047718, 992063492063573,
+                1240079365079443, 1488095238095324, 1736111111111179, 1984126984127014, 2232142857142919,
+                2480158730158837, 4960317460317577, 7440476190476328, 9920634920635018, 12400793650793758,
+                14880952380952509, 17361111111111186, 19841269841269891, 22321428571428666, 24801587301587391,
+                49603174603174665, 74404761904761998, 99206349206349292, 124007936507936614, 148809523809523899,
+                173611111111111193, 198412698412698515, 223214285714285824, 248015873015873166, 496031746031746152,
+                744047619047619212]
+
 
     for i, sg_sum in enumerate(sg_table, 1):
         if sg_cache.get(i):
@@ -592,10 +569,53 @@ def development_main(size=200):
     # sg_list = [sg(i) for i in range(1, size+1)]
     # print(sg_list)
 
+def analyze_main():
+    di = defaultdict(list)
+    dv = defaultdict(set)
+    dc = defaultdict(int)
+    dist = set ()
+    for i in range(117, 50001):
+        x, y, z = find_fn(i)
+        dist.add(z)
+        if y * 9 > 1000000000000:
+            v = y * 9 % 1000000000000
+            dv[z].add(v)
+        di[z].append(i)
+    distances = sorted(list(dist))
+
+    print('dist\tcnt\tval\tskip\tmin')
+    for d in distances:
+        vl = list(dv[d])
+        v = ''
+        if len(vl) == 1:
+            v = str(vl[0])
+        else:
+            v = vl
+        dd = defaultdict(int)
+        for i in range(1, len(di[d])):
+            dd[di[d][i]-di[d][i-1]] += 1
+        s = ''
+        if len(dd) == 1:
+            s = list(dd.keys())[0]
+        elif len(dd) == 2:
+            print(f'{d}\t{len(di[d])}\t{v}\t{di[d][3]-di[d][1]}\t{di[d][1]}Check')
+            s = di[d][2]-di[d][0]
+        else:
+            s = dd
+        print(f'{d}\t{len(di[d])}\t{v}\t{s}\t{di[d][0]}')
+
+
+
+    for i in range(201, 100001):
+        x, y, z = find_fn(i)
+        sg = y*9+digits_sum(int(z))
+        if z == 69750009:
+            print(f'{i},{len(x)},{x[:6]},{y % 1000000000000},{y * 9 % 1000000000000},{z},{sg%100000000000}')
+
 
 if __name__ == "__main__":
     # DEBUG = True
     # hacker_main()
     # profile_main(150000)
-    development_main(100)
+    development_main(200)
     exit()
