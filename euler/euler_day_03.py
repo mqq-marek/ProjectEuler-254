@@ -349,7 +349,8 @@ def g_sequence(max_i, *, mod=None):
     suffix = FDigits(0)
     for i in range(1, max_i + 1):
         if DEBUG:
-            print(f'G({i}) starts with suffix len {suffix.n}')
+            pass
+            # print(f'G({i}) starts with suffix len {suffix.n}')
         if sg_cache.get(i):
             continue
         more_results = False
@@ -473,10 +474,10 @@ def development_main(size=200):
 
 
 if __name__ == "__main__":
-    # DEBUG = True
+    DEBUG = True
     # hacker_main()
     # profile_main(100)
-    development_main(200)
+    development_main(1000)
     exit()
 
 

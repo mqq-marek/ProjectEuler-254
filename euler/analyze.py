@@ -5,7 +5,6 @@ from functools import reduce
 from itertools import combinations
 
 
-
 def digits_gen(n):
     """
     Yields number n digits in reverse sequence. For n = 342 sequence is 2, 4, 3
@@ -17,6 +16,94 @@ def digits_gen(n):
         n //= 10
         if not n:
             break
+
+
+PREFIX_INFO = defaultdict(list)
+PREFIX_V = {}
+
+
+def init_prefixes():
+    for i1 in range(2):
+        for i2 in range(3):
+            for i3 in range(4):
+                for i4 in range(5):
+                    for i5 in range(6):
+                        for i6 in range(7):
+                            for i7 in range(8):
+                                for i8 in range(9):
+                                    i = i1 + i2 + i3 + i4 + i5 + i6 + i7 + i8
+                                    if not i:
+                                        continue
+                                    prefix = ('1' * i1 + '2' * i2 + '3' * i3 + '4' * i4 +
+                                              '5' * i5 + '6' * i6 + '7' * i7 + '8' * i8)
+                                    f_ = f(prefix)
+                                    fs_ = sf(prefix)
+                                    # F_PREFIX[prefix] = f_
+                                    # PREFIXES[fs_ % 9].append(prefix)
+                                    PREFIX_V[f_] = prefix
+                                    PREFIX_INFO[fs_ % 9].append((prefix, list(digits_gen(f_))))
+    for k in PREFIX_INFO.keys():
+        PREFIX_INFO[k].sort(key=lambda x: int(x[0]))
+
+
+FACTORIALS = [math.factorial(i) for i in range(10)]
+FACTORIAL9_DIGITS = [d for d in digits_gen(FACTORIALS[9])]
+
+def find_fn(digits_sum):
+    for i_str in gen_prospect_fn(digits_sum):
+        i = int(i_str)
+        n9 = i // FACTORIALS[9]
+        distance = i - n9 * FACTORIALS[9]
+        if distance <= 299999:
+            return i_str, n9, distance
+
+
+def gen_prospect_fn(digits_sum):
+    """ Build suffix which gives g(i) = i """
+    n9, d = divmod(digits_sum, 9)
+    if d == 0:
+        first = ''
+        next = '1'
+    else:
+        first = chr(d+ord('0'))
+        next = chr(d + 1 + ord('0'))
+
+    yield first + '9' * n9
+    for i in range(n9):
+        yield next+'9'*i+'8'+'9'*(n9-i-1)
+
+def f(n):
+    """
+    Define f(n) as the sum of the factorials of the digits of n.
+    For example:
+        f(342) = 3! + 4! + 2! = 32
+    :param n: number
+    :return: sum digits factorial of n
+    """
+    if isinstance(n, str):
+        n = int(n)
+    if isinstance(n, int):
+        return sum([FACTORIALS[d] for d in digits_gen(n)])
+    elif isinstance(n, list):
+        return sum([FACTORIALS[d] for d in n])
+    else:
+        return sum([FACTORIALS[d] for d in n.digits_gen()])
+
+
+
+def sf(n):
+    """
+    Compute sf(n) as the sum of the digits of f(n).
+    Store in sf_cache the value n for which the reached the first time key sf(n)
+    So:
+    sf(144) = 4 + 9 = 13 as f(144) is 1!+4!+4! = 49
+    For n = 144 is minimum n such that sf(n) = 13 so sf_cache[13] = 144
+    :param n: number
+    :return: sum digits of f(n)
+    """
+    sf_ = digits_sum(f(n))
+    return sf_
+
 
 class Digits:
     def __init__(self, number):
@@ -155,6 +242,11 @@ def digits_sum(n):
 n9mod = {}
 
 if __name__ == '__main__':
+    init_prefixes()
+    for i in range(90, 101):
+        fn, n9, d = find_fn(i)
+        print(f'g({i}) = {PREFIX_V[d]}+9*{n9}')
+    exit()
     # 3125 - mod 10**6 seed/loop
     print(FACTORIALS)
     n = 0
