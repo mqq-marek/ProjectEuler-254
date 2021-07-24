@@ -16,7 +16,6 @@ from itertools import zip_longest
 DEBUG = False
 
 PREFIX_V = {}
-PREFIX_INFO = defaultdict(list)
 sg_cache = {}
 PREF_I = [
     (181, 295039, "134445555666778888888"),
@@ -249,20 +248,23 @@ sg_mod_cache = {}
 
 
 def get_sg(i, m):
+    cost = 1
     if sg_cache.get(i):
-        return sg_cache.get(i) % m
+        return sg_cache.get(i) % m, 1
     i_ = (i - PREF_START) % PREF_LEN
     f_pref = PREF_I[i_][1]
     pref_ = PREF_I[i_][2]
+    cost = 2
     if sg_mod_cache.get(i_, None) is None:
-        ps, n9, d = find_fn(i)
+        ps, n9, d, c = find_fn(i)
+        cost += c
         sg_ = n9*9 + digits_sum(int(ps))
         if sg_ > m:
             sg_ = sg_ % m
             sg_mod_cache[i_] = sg_
     else:
         sg_ = sg_mod_cache[i_]
-    return sg_
+    return sg_, cost
 
 
 def find_fn(digits_sum):
@@ -270,11 +272,12 @@ def find_fn(digits_sum):
     for i_str in gen_prospect_fn(digits_sum):
         cost += 1
         i = int(i_str)
-        n9 = i // FACTORIALS[9]
-        distance = i - n9 * FACTORIALS[9]
+        n9, distance = divmod(i, FACTORIALS[9])
+        # n9 = i // FACTORIALS[9]
+        # distance = i - n9 * FACTORIALS[9]
         if PREFIX_V.get(distance):
-            return i_str, n9, distance
-            cost = 0
+            return i_str, n9, distance, cost
+        cost = 0
     raise Exception("fn not found")
 
 
@@ -627,6 +630,7 @@ def g_sequence(max_i, *, mod=None):
 
     sg_mod_cache.clear()
     suffix = FDigits(0)
+    total_cost = 0
     for i in range(1, max_i + 1):
         if DEBUG:
             pass
@@ -634,11 +638,12 @@ def g_sequence(max_i, *, mod=None):
         if sg_cache.get(i):
             continue
         if i >= 100:
-            fv, n9, d = find_fn(i)
+            fv, n9, d, cost = find_fn(i)
+            total_cost += cost
             prefix = PREFIX_V[d]
             if DEBUG:
                 print(
-                    f"cost: {-2:12}, "
+                    f"cost: {cost:12}, "
                     f"f(n)={int(fv):40}, "
                     f"len={len(prefix) + n9:8}, "
                     f"g({i:5})={prefix}+9*{n9}"
@@ -674,7 +679,7 @@ def g_sequence(max_i, *, mod=None):
         if more_results and DEBUG:
             print(f"Best result for i={i} is {str(prefix)}+9*{current_suffix.n}")
         suffix = FDigits(max(0, current_suffix.n - 10))
-    return sg_cache
+    return total_cost
 
 
 def sg(i):
@@ -690,10 +695,14 @@ def sg(i):
 
 
 def sum_sg_mod(n, m):
-    g_sequence(n)
+    cost = g_sequence(n)
     s = 0
     for i in range(1, n + 1):
-        s = (s + get_sg(i, m)) % m
+        v, c = get_sg(i, m)
+        cost += c
+        s = (s + v) % m
+    if DEBUG or True:
+        print(f'sum_sg_mod({n},{m}) cost is {cost}, avg: {cost/n:.3f}')
     return s
 
 
@@ -959,70 +968,12 @@ def development_main(size=200):
     # print(sg_list)
 
 
-def analyze_main():
-    init_prefixes()
-    di = defaultdict(list)
-    dv = defaultdict(set)
-    dc = defaultdict(int)
-    dist = set()
-    for i in range(181, 50001):
-        x, y, z = find_fn(i)
-        dist.add(z)
-        if y * 9 > 1000000000000:
-            v = y * 9 % 1000000000000
-            dv[z].add(v)
-        di[z].append(i)
-    distances = sorted(list(dist))
-
-    dic = {}
-    # print('dist\tcnt\tval\tskip\tmin')
-    for d in distances:
-        vl = list(dv[d])
-        v = ""
-        if len(vl) == 1:
-            v = str(vl[0])
-        else:
-            v = vl
-        dd = defaultdict(int)
-        for i in range(1, len(di[d])):
-            dd[di[d][i] - di[d][i - 1]] += 1
-        s = ""
-        if len(dd) == 1:
-            s = list(dd.keys())[0]
-        elif len(dd) == 2:
-            # print(f'{d}\t{len(di[d])}\t{v}\t{di[d][3]-di[d][1]}\t{di[d][1]}')
-            dic[di[d][1]] = (d, di[d][3] - di[d][1])
-            s = di[d][2] - di[d][0]
-        else:
-            s = dd
-        # print(f'{d}\t{len(di[d])}\t{v}\t{s}\t{di[d][0]}')
-        dic[di[d][0]] = (d, s)
-    min_pos = min(dic.keys())
-    max_pos = max(dic.keys())
-    for p in range(min_pos, max_pos):
-        d, step = dic[p]
-        if p + step < max_pos and not dic.get(p + step):
-            dic[p + step] = (d, step)
-    print(f"pos\tdist\tstep")
-    PPREF_I = []
-    for p, (d, s) in sorted(dic.items()):
-        print(f"{p}\t{d}\t{s}")
-        PPREF_I.append((p, d, PREFIX_V[d]))
-    print(f"PREF_I = {PPREF_I}")
-
-    for i in range(201, 100001):
-        x, y, z = find_fn(i)
-        sg = y * 9 + digits_sum(int(z))
-        if z == 69750009:
-            print(
-                f"{i},{len(x)},{x[:6]},{y % 1000000000000},{y * 9 % 1000000000000},{z},{sg%100000000000}"
-            )
 
 
 if __name__ == "__main__":
     # analyze_main()
     # DEBUG = True
     # hacker_main()
-    profile_main(500000)
-    # development_main(20000)
+    # profile_main(50000)
+    development_main(50000)
     exit()

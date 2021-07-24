@@ -461,7 +461,7 @@ if __name__ == "__main__":
     DEBUG = True
     # hacker_main()
     # profile_main(100)
-    development_main(200)
+    development_main(150)
     assert_gen()
     exit()
 

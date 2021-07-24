@@ -235,12 +235,11 @@ def main():
 if __name__ == "__main__":
     DEBUG = True
     pgm_start = time.perf_counter()
-    nn = 65
+    nn = 70
     total = sum_sg(nn)
     pgm_stop = time.perf_counter()
     print(f"sum_sg({nn}) is {total} computed in {pgm_stop - pgm_start:.2f} seconds")
-    for i in range(1, 66):
-        print(f'assert sg({i}) == {sg(i)}')
+
     """
 For n = 1          sf(n) =  1. sg( 1) =  1. Time:   0.0000 seconds
 For n = 2          sf(n) =  2. sg( 2) =  2. Time:   0.0000 seconds

@@ -121,7 +121,7 @@ def g_sequence(max_i):
 
 
 The last change we made before detailed task analysis is the way how 
-we will represent numbers on which we will work.
+we will represent number n on which we will work.
 
 Let's define class Digits which will represent the numbers.
 Class digits will represent number as a list of integers 0-9 
@@ -134,19 +134,20 @@ We make them slightly better than just take the next integer.
   as later we look only for minimal n such that sf(n) = s(f(n)) = i. 
   So if we have numbers n0, n1, n2, ... having the same f_value 
   we need to find the smallest one and skip all others. 
-  Eg 2 = f(2) = f(11) = f(1223) = f(2333). So only 2 necessary.
+  E.g., 2 = f(2) = f(11) = f(1223) = f(2333). So, we need only 2.
+- Minimal n giving f(n)=i has digits in not decreasing order. 
+  If some digits are decreasing like 32 then f(23)=f(32) and 23 < 32  
 - If we have sequence od digits d[0],...,d[i], d[i+1], ....d[k] then
 f(d[0]....d[k]) = f(d[0])...f(d[i]) + f(d[i+1]...d[k]) based on f definition
 - If we have minimal n where s(f(n)) = i, then n does not contain 0. 
-  We can substitute 10 by 2 because f(10)=f(2) and 2 < 10. We can
+  We can always substitute 10 by 2 because f(10)=f(2) and 2 < 10. We can
   substitute 20 by 12 because f(20)=f(12) and 12 < 20...
-- Minimal n giving f(n)=x has digits in not decreasing order. 
-  If some digits are decreasing like 32 then f(23)=f(32) and 23 < 32
 
-Based on this next method when going to next number for computing f(n) 
-works in a way that next number after 239999 is 244444 not 24000 
-because all numbers between 24000 and 24443 can be reduced to smaller number which gives the same value,
-so they were processed earlier if we process number in increasing order.
+
+Based on this analysis we build next method. In it instead of increasing 
+n by 1 when search for g(i) = n, we will take next n in a way that next 
+number will be selected in a way that its digits are in increasing order. E.g. 
+after 239999 next is 244444 not 24000.
 
 ```python
 class Digits:
@@ -190,8 +191,8 @@ class Digits:
 ```
 
 Now speed of the algorithm is around 600 times faster, 
-but it allows as to increase computing sum_sg from 45 to only 55 
-in around minute.
+but it allows as to increase computing sum_sg from 45 to 55 
+in time of one minute.
 For g(45), n is 12378889
 For g(55), n is 1333666799999999999
 For g(60), n is 1233456679999999999999999999999
@@ -200,27 +201,18 @@ You can notice the n size increases very fast, so the methods
 which is based on finding incrementally such n that sf(n) = i
 for i > 70 will not work.
 
-In next part we will look more detailed how functions f(n)/sf(n) works 
-and how to find other method for compute g(i) for bigger i.
-
 Python code is in file euler_day_01.py. 
 Tests are in test_euler_day_01.py. 
 
 ## Day 2
-We will look more detailed on the way how different n gives the same f(n). 
+We will look more detailed on the way how different n gives the same f(n).
 
-Our goal is to find cheap methods of finding g(i).
-
-At the moment for finding g(i) where i>60 we need scan 
-numbers in increasing order which has more than 32 digits 
-so this approach will not work for longer i.
-
-As you noticed yesterday interesting numbers has digits ordered 
+Yesterday we noticed the prospect n numbers has digits ordered 
 from smallest to highest.
 We also notice yesterday some reduction property: 
 - if n has two 11 digits it can be 
-replaced by 2 which is lower number 
-as it's length is shorter by one digit.
+replaced by 2 which is makes smaller number 
+because its length is shorter by one digit.
   
 So we know that numbers which are result of g(i) have maximum one digit 1.
 
@@ -230,7 +222,7 @@ If we apply the same rules to others digit we can easily find that:
 - ...
 - f(888888888) = f(9) as 9 * 8! = 9!
 
-As a result that number candidates for being n such that g(i)=i have
+As a result that number candidates for being n such that g(i)=n have
 the following pattern:
 
 ^1{0,1}2{0,2}3{0,3}4{0,4}5{0,5}6{0,6}7{0,7}8{0,8}9*$
@@ -238,10 +230,16 @@ the following pattern:
 - digits are in ascending order
 - there is max 1 time 1, 2 times 2, ..., 8 times 8 and any number of 9 digits
 
+We can look as prospect n as pair prefix and suffix. 
+- Prefix contains digits from 1 to .8 and has length in range 0..36 digits 
+with the longest prefix: 12233344445555566666677777778888888
+- Suffix 0 or more digits 9. Unlimited length.
+
+
 We modify method which gives us next n in a way that after every increment 
-we will enforce that number will be modified in a way that digits 
-fulfill prefix definition.
-Update function will verify that digit d will not occur more that d times.
+we will enforce that next number will be modified in a way that enforce rules states above.
+
+Update function will verify that digit d will not occur more that d times except 9.
 
 ```python
 class Digits:
@@ -323,26 +321,45 @@ class Digits:
 Only 4 times faster than day before.
 We need huge increase.
 
-Let's start building faster numbers "n" as prefix suffix pair on next day.
+Let's try harder next day.
 
 Python code is in file euler_day_02.py. 
 
 Tests are in test_euler_day_02.py. 
 
 ## Day 3
-In previous days we worked on a way how to i,prove speed on 
-generating n such that g(i) is n. 
+In previous days we worked on a way how to improve speed on 
+finding n such that g(i) is n. 
 
-We noticed first that such n hav digits in increasing order, 
-next that it contains max 1 time digit 1 ,  
-..., 8 times digit 8 and unlimited number 9 digits.
+Now we are ready to discover that this does not help us find solution.
 
-That still does not allow us to go above computing g(70).
 
-Today we will go further with better guessing numbers 
-which will be result of g(i) function.
+g(i) is defined as smallest number n such sf(n) (sum of digits f(n)) is eqal n.
+For given i the smallest number having digits sum of i is number 
+composed of digits 9 and up to one digit at the beginning which sum up to i,
 
-We know that such n  can contain 
+Simply we have number with digit i % 9 at the beginning and i//9 digits n.
+So f(n) has i//9 digits. 
+
+When we have k digits f(n) this number is sum of factorial of digits n. 
+The biggest factorial is for 9 digit which is less than 10**7. 
+That means that for k digits f(n) the number n will have minimum 10**(k-7) digits n.
+
+So that means that for given i, g(i) will have number n 
+having minimum 10**(i//9-7) digits so value of n is 10 ** (10 ** (i//9-7)).
+
+For i = 300, n will have 8267195767195767195767195767 
+digits 9 plus prefix: 12233344445557777778.
+which is 28 digits fo 9 digits comparing to 26 from our approximation.
+
+That is clear why method which is based on searching n 
+will not work for bigger i.
+
+We need to find other, cheap method for finding g(i) which is not based on 
+incremental n increase and test that sf(n)=i.
+
+
+We know that n  contains 
 some digits from PREFIX: 122333444455555666666777777788888888 and
 SUFFIX: any number of digits 9.
 
