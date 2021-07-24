@@ -458,11 +458,11 @@ def development_main(size=200):
 
 
 if __name__ == "__main__":
-    DEBUG = True
+    # DEBUG = True
     # hacker_main()
     # profile_main(100)
-    development_main(150)
-    assert_gen()
+    development_main(2000)
+    # assert_gen()
     exit()
 
 

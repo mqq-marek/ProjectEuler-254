@@ -387,10 +387,18 @@ we know that f(SUFFIX) can modify only lowes 6 digits of n,
 while all others depend on f(SUFFIX)
 
 
-So let's start and define all prefixes in dictionary based on  k%9, 
-where k is 
-digits sum of prefix and value is list of prefixes 
-where sf(prefix) = k%9.
+So let's start and define all prefixes in dictionary which allows us 
+map sf(prefix) to prefix. 
+
+For speed up we group prefixes based on 
+sf(prefix) value. Sometimes when adding f(Suffux) + f(Prefix) we
+can get number with different sum od digits so you can group by sum of digits modulo 9.
+. 
+In general sf(a+b) != sf(a) + sf(b), but sf(a+b) = (sf(a) + sf(b)) % 9.
+See for this [Digit Sum Arithmetic] 
+(https://www.sjsu.edu/faculty/watkins/Digitsum00.htm).
+There are many articles here about digits sum properties, but most of
+them are for reduce digits sum of number until you get single digit sum.
 
 Eg:
 ```python
@@ -413,7 +421,7 @@ def init_prefixes():
                                     prefix = ('1' * i1 + '2' * i2 + '3' * i3 + '4' * i4 +
                                               '5' * i5 + '6' * i6 + '7' * i7 + '8' * i8)
                                     sf_ = sf(prefix)
-                                    PREFIXES[sf_].append(prefix)
+                                    PREFIXES[sf_%9].append(prefix)
     for k in PREFIXES.keys():
         PREFIXES[k].sort(key=lambda x: int(x))
 ```
@@ -709,8 +717,33 @@ def sg(i):
     return int(sf_cache[i])
 ```
 Now we can see:
-sum_sg(2000) is 1488318475843231622024032761557517336309747047271803050595461332986088764881175618700374479166889904414660193452604190128945907738318475843231622024032761557517336309747047271803050595461332986088764881175618700374524921 
-computed in 68.24 seconds
+sum_sg(2000) is 272817460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460519218 
+computed in 5708.60 seconds.
+
+To verify is this is correct please register on [Project Euler](https://projecteuler.net) web page.
+Go to problem 254 and enter value for sum of sg for 150.
+But on HackerRank problem is more difficult you - you must build solution which is fast 
+enough to pass the tests.
+
+##Day 4
+The first time we receive algorithm which which is still very slow 
+but can compute g(i) for i 
+up to thousands.
+
+The solution built is not easy to build and test and fix 
+especially for small i.
+
+The reason behind is the prefix/suffix interaction. For small i, 
+the prefix part summed up with suffix(missing or very small) 
+introduce huge noise as both parts are very irregular - 
+increase and decrease very rapidly.
+Later on impact of P
+prefix part is negligible as 
+distance between two n's having the same sum is bigger than 36 - 
+length of suffix. That makes always only one solution with given sum size i as the next  
+solution the nearest n having required sum size.
+
+
 
 
 
