@@ -350,7 +350,7 @@ having minimum 10**(i//9-7) digits so value of n is 10 ** (10 ** (i//9-7)).
 
 For i = 300, n will have 8267195767195767195767195767 
 digits 9 plus prefix: 12233344445557777778.
-which is 28 digits fo 9 digits comparing to 26 from our approximation.
+which is 10**28 9 digits comparing to 10**26 from our approximation.
 
 That is clear why method which is based on searching n 
 will not work for bigger i.
@@ -362,35 +362,39 @@ incremental n increase and test that sf(n)=i.
 We know that n  contains 
 some digits from PREFIX: 122333444455555666666777777788888888 and
 SUFFIX: any number of digits 9.
+If n is concatenations of digits in PREFIX and SUFFIX then 
+f(n) = f(PREFIX) + f(SUFFIX).
+We can find (eg. generating all PREFIXES) that we have 9!-1 prefixes 
+and for ay number k from range 1..9!-1 exist prefix such that f(prefix) = k.
 
-Next we know g(i) is the smallest number n such that digits sum of f(n) 
-are equal i.
-If n is concatenations of digits in PREFIX and SUFFIX then we 
-have that f(n) = f(PREFIX) + f(SUFFIX)
+So for given x we can find n such that f(n) = x in 
+the following way: SUFFIX length is x // 9!. For prefix part we 
+need to find prefix such that f(prefix) = x % 9!. 
+The easiest is to make table or dictionary which maps from f(prefix)
+to prefix (9!-1 elements).
 
-Max length prefix 122333....8888888 has 36 digits and f(prefix) = 9!-1 = 362880-1.
+Having this we can build new way of finding n in a way that for a given i 
+we try to build f value which gives us i digits and from founded f 
+we can build n such that f(n) = f where sum of digits of f is i.
 
-Max sum of digits for prefix is 47 when prefix 12233344445556667778888888 
-because f(prefix) = 299999
+Unfortunately not always smallest f value with sum digits = i 
+gives us the smallest n, so we need to look for more numbers having 
+sum of digits equal i for finding smallest n.
 
-On other side suffix can be any length and k suffix (k digits 9) has value 
-k * 9! = k * 362880.
+f(n) = f(PREFIX) + f(SUFFIX)
+buf max(f(SUFFIX)) = 9!-1 so when we look at sum of digits(f(n))
+we know that f(SUFFIX) can modify only lowes 6 digits of n,
+while all others depend on f(SUFFIX)
 
-That means that last six digits of f(Suffix) need to be counted 
-together with f(Prexix) 
-when counted sum and all digits of f(Suffix) on 
-position 7 and higher form fs(n) without any 
-dependency of prefix. (Note: When adding prefix 
-and suffix and on some position sum of digits is greater than 
-9 the number is not optimal as it lost 9 is total sum of digits)
 
-So let's start and define all prefixes in dictionary where k is 
-digits sum and value is list of prefixes where sf(prefix) = k.
+So let's start and define all prefixes in dictionary based on  k%9, 
+where k is 
+digits sum of prefix and value is list of prefixes 
+where sf(prefix) = k%9.
 
 Eg:
 ```python
-{1: ['1', '223', '224444', '22334556', '22334555556666667','22334555556666677788'],
- 47: ['12233344445556667778888888'],}
+{1: ['1', '223', '224444', '22334556', '22334555556666667','22334555556666677788'],}
 ```
 
 ```python
