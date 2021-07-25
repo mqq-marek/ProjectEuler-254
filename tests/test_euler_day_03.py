@@ -1,6 +1,6 @@
 import pytest
-import euler.euler_day_03 as e
-from euler.euler_day_03 import FDigits, sg
+import euler.euler_day_03_old as e
+from euler.euler_day_03_old import FDigits, sg
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -334,7 +334,7 @@ finding n such that g(i) is n.
 Now we are ready to discover that this does not help us find solution.
 
 
-g(i) is defined as smallest number n such sf(n) (sum of digits f(n)) is eqal n.
+g(i) is defined as smallest number n such sf(n) (sum of digits f(n)) is equal n.
 For given i the smallest number having digits sum of i is number 
 composed of digits 9 and up to one digit at the beginning which sum up to i,
 
@@ -356,9 +356,14 @@ That is clear why method which is based on searching n
 will not work for bigger i.
 
 We need to find other, cheap method for finding g(i) which is not based on 
-incremental n increase and test that sf(n)=i.
+incremental n increase and test that sf(n)=i where base on 
+definition sf(n) is f(n) sum of digits .
 
+So instead of generate successive n, lets 
+try for given i generate successive f_values where f_value sum of digits is i.
+We still need n, as sg(i) is sum digits of n.
 
+We need to built reverse f function which from f_value gives us n.
 We know that n  contains 
 some digits from PREFIX: 122333444455555666666777777788888888 and
 SUFFIX: any number of digits 9.
@@ -367,46 +372,43 @@ f(n) = f(PREFIX) + f(SUFFIX).
 We can find (eg. generating all PREFIXES) that we have 9!-1 prefixes 
 and for ay number k from range 1..9!-1 exist prefix such that f(prefix) = k.
 
-So for given x we can find n such that f(n) = x in 
+So for given f_value we can find n such that f(n) = f_value in 
 the following way: SUFFIX length is x // 9!. For prefix part we 
 need to find prefix such that f(prefix) = x % 9!. 
 The easiest is to make table or dictionary which maps from f(prefix)
 to prefix (9!-1 elements).
 
-Having this we can build new way of finding n in a way that for a given i 
-we try to build f value which gives us i digits and from founded f 
-we can build n such that f(n) = f where sum of digits of f is i.
+Now our new approach for finding g(i) for given i looks like this:
+- Let's get the lowest number f_value having sum of digits = i
+- Using reverse f function find n such that f(n) = f_value, and sf(n) = i
 
-Unfortunately not always smallest f value with sum digits = i 
-gives us the smallest n, so we need to look for more numbers having 
-sum of digits equal i for finding smallest n.
+Unfortunately we need sometimes scan more than one f_value with sum i 
+as we need find smallest n such that sf(n)=i - starting from the smallest 
+f_value does not give us smallest n .
 
-f(n) = f(PREFIX) + f(SUFFIX)
-buf max(f(SUFFIX)) = 9!-1 so when we look at sum of digits(f(n))
-we know that f(SUFFIX) can modify only lowes 6 digits of n,
-while all others depend on f(SUFFIX)
+For example for i =21 smallest f_value 
+which have sum 21 is 399 = f(12334555)=399. 
+Next number with sum 21 is 489 = f(1235555).
+When we go further with scanning  numbers having sum 21
+we can find for example 768 = f(446), 362910 = f(349). 
+The last one gives us n which is g(21) = 349.
 
+We need to limit in some way this scan. 
+
+The easiest way is to take the length of the first prefix here 
+is 8=length(12334555), which gives us limit for f value as 8*9!.
+Based on the way how we build n from v_value 
+we know that for f_value > k*9! we will have k digits with non-empty prefix or 
+more than k digits 9.
 
 So let's start and define all prefixes in dictionary which allows us 
-map sf(prefix) to prefix. 
+map f(prefix) to prefix. For better 
+speed we can use list instead of dictionary.
 
-For speed up we group prefixes based on 
-sf(prefix) value. Sometimes when adding f(Suffux) + f(Prefix) we
-can get number with different sum od digits so you can group by sum of digits modulo 9.
-. 
-In general sf(a+b) != sf(a) + sf(b), but sf(a+b) = (sf(a) + sf(b)) % 9.
-See for this [Digit Sum Arithmetic] 
-(https://www.sjsu.edu/faculty/watkins/Digitsum00.htm).
-There are many articles here about digits sum properties, but most of
-them are for reduce digits sum of number until you get single digit sum.
-
-Eg:
-```python
-{1: ['1', '223', '224444', '22334556', '22334555556666667','22334555556666677788'],}
-```
 
 ```python
-PREFIXES = defaultdict(list)
+PREFIX = {}
+
 
 def init_prefixes():
     for i1 in range(2):
@@ -418,94 +420,69 @@ def init_prefixes():
                             for i7 in range(8):
                                 for i8 in range(9):
                                     i = i1 + i2 + i3 + i4 + i5 + i6 + i7 + i8
-                                    prefix = ('1' * i1 + '2' * i2 + '3' * i3 + '4' * i4 +
-                                              '5' * i5 + '6' * i6 + '7' * i7 + '8' * i8)
-                                    sf_ = sf(prefix)
-                                    PREFIXES[sf_%9].append(prefix)
-    for k in PREFIXES.keys():
-        PREFIXES[k].sort(key=lambda x: int(x))
+                                    if i:
+                                        prefix = ('1' * i1 + '2' * i2 + '3' * i3 + '4' * i4 +
+                                                  '5' * i5 + '6' * i6 + '7' * i7 + '8' * i8)
+                                        f_ = f(prefix)
+                                        PREFIX[f_] = prefix
+    PREFIX[0] = ''
 ```
 
-For suffixes, we assume the following approach:
-- Define class FDigits which will keep values f(n) instead of as previously
-keep values of n. One of the reason for this: g(129) = n with 
-  prefix = 4466788 and suffix: 5,511,463,844 times digit 9,
-  while f(n) has 16 digits only.
-  
-- Method next will instead iterate over n will try to find 
-  next f value with same or bigger sum of digits and is multiple of 9!.
-  We will take into account digits starting from position 5 and up 
-  as digits 0-4 and partly 5 can be filled up to value 47 by prefix.
-  
-Having number n and required s = sum of digits it's very easy to 
-build the lowest number n1 >= n having s digits.
-- we need to increase digits starting with the least significant by incrementing 
-  digit value up to 9 or less until we reach s. 
-  If all digits have 9, and we do not reach s than we increase this 
-  number by 1 and start procedure again from the least significant digit 
-  again and again until we reach s.
-- when we find such number we keep them if it is multiple of 9!. 
--  If not we increase this number until it will be multiple of 9! 
-   Verify sum of digits. If sum of digits after increase is not >= s, 
-   then we repeat process again
-   
-So our base algorithm works in the following way:
-- Start with the shortest suffix = 0
-- look for g(i)
-- find the shortest suffix such that sf(suffix) + 47 >= i
-- sf(suffix) or sf(suffix+prefix) = i than we store prefix, suffix with  
-  the length of (prefix+suffix)
-- next we also check for the same i and longer suffix in 
-  range up to suffix len equals initial length(prefix+suffix).
-  
-Our search order is not strictly increasing.  Sometimes 
-we can encounter situation like this:
-
-cost:           29, len=     6, g(38) = 24447+9*1
-
-cost:            5, len=     5, g(38) = 235+9*2
-
-cost:            3, len=     8, g(38) = 278+9*5
-
-Best result for i=38 is 235+9*2
-
-As you see we search the first base on suffix length and next try to find prefix which with 
-suffix gives us required sum of digits. So in this case:
-- our the first finding is n =244479 which has 6 digits. 
-- our second finding is 23599 which has 5 digits (the best result) but 
-  found in the second step (order based on increasing number of digits 9).
-- the third finding is not the best one
-- we can stop looking for better results when numbers of 9 will 
-  be equal length of the beset find which is 5, because every finding with 6 or more 
-  digits gives us higher number because number of 9 digits in it
-
-Let's look at FDigits class:
+For fining f values with given sum  we define FDigits class.
+assume the following approach:
+- class constructor need to have parameter - number of digits
+- class works as iterator so class object will generate  
+  sequence of numbers with given sum of digits in increasing order 
+- sequence for 1: 1, 10, 100, 1000, ...
+- sequence for 20: 299, 389, 398, 479, 488, ...
+- property num keeps internal number representation as sequence of digits
+- property value gives integer number representation
+- internally method next_number gives next number with given sum of digits
 
 ```python
-def get_new_suffix_value(number):
-    """ Return list representation of number * 9!. """
-    return list(digits_gen(number * FACTORIALS[9]))
+def build_first_number_with(digits_sum):
+    """
+    Build the smallest number with given sum of digits
+    :param digits_sum: 
+    :return: list of digits in reverse order
+    for digits sum 20 returns: [9, 9, 2], 
+    for digits_sum 45 returns : [9, 9, 9, 9, 9]
+    """
+    n9, d = divmod(digits_sum, 9)
+    result = [9] * n9
+    if d != 0:
+        result += [d]
+    return result
 
 
 class FDigits:
-    def __init__(self, number):
-        if isinstance(number, str):
-            if not number:
-                number = '0'
-            number = int(number)
-        if isinstance(number, int):
-            self.n = number
-            self.num = get_new_suffix_value(number)
-        else:
-            self.num = number.num[:]
-            self.n = number.n
-        self.suffix = self.num[:]
-        self.sum = self.suffix_digits_sum()
-        self.prefix = [0]
+    """
+    Iterator class - gives increase sequence of numbers with given sum
+    """
+    def __init__(self, sum_digits):
+        self.sum = sum_digits
+        self.initialized = True
+        self.cost = 0
+        self.num = build_first_number_with(self.sum)
 
     def __str__(self):
-        """ Return number value as str """
+        """ Return number value as str. """
         return ''.join([chr(d + ord('0')) for d in self.num[::-1]])
+
+    def __iter__(self):
+        """ Returns itself as an iterator object. """
+        return self
+
+    def __next__(self):
+        """
+        Returns the next number with digits sum equals self.sum.
+        """
+        if self.initialized:
+            # First time do nothing as number is initialized to the lowest one during __init__
+            self.initialized = False
+        else:
+            self.next_number()
+        return self
 
     @property
     def value(self):
@@ -514,234 +491,332 @@ class FDigits:
 
     def digits_sum(self):
         """
-        Sum of suffix only digits in  n.
-        Does not include 5 least significant digits and max 7 on the 6th least significant digits.
-        :return:
+        Sum of all digits.
         """
         return sum(self.num)
 
-    def suffix_digits_sum(self):
+    def next_number(self):
         """
-        Sum of suffix only digits in  n.
-        Does not include 5 least significant digits and max 7 on the 6th least significant digits.
-        :return:
-        """
-        suffix_sum = min(7, sum(self.num[5:6]))
-        suffix_sum += sum(self.num[6:])
-        return suffix_sum
-
-    def next(self):
-        """
-        Finds next suffix with the same or greater suffix_digit_sum
+        Finds next value with self.sum digits sum
         """
 
-        def increase_digit(need, digit, *, max_digit=9):
+        def increase_digit(need, digit):
             """
-            Increase digit by amount needed. Return Missing amount and increased digit
+            Increase digit by amount needed. Return missing amount and increased digit
             :param need: amount of sum digits needed
             :param digit: current digit value
-            :param max_digit: maximum digit value
             :return: missing_amount, increased_digit
             """
-            inc = min(need, max_digit - digit)
+            inc = min(need, 9 - digit)
             return need - inc, digit + inc
 
-        def revert_suffix():
-            self.num = self.suffix[:]
-            assert self.sum == self.suffix_digits_sum()
-
         def update_value(inc_sum):
-            # inc_sum = max(0, self.sum - self.suffix_digits_sum())
-            # try to increase digit po position 5 up to 7
-            inc_sum, self.num[5] = increase_digit(inc_sum, self.num[5], max_digit=7)
-            for i in range(6, len(self.num)):
+            for i in range(len(self.num)):
                 inc_sum, self.num[i] = increase_digit(inc_sum, self.num[i])
                 if inc_sum == 0:
                     return 0
             return inc_sum
 
-        def next_value_with_sum(sum_needed):
-            still_needed = sum_needed - self.suffix_digits_sum()
-            while still_needed > 0:
-                still_needed = update_value(sum_needed - suffix_sum)
+        def get_value_with_sum(needed):
+            still_needed = needed - self.digits_sum()
+            while still_needed:
+                still_needed = update_value(still_needed)
+                self.cost += 1
+                # If not finished in one update_value call, it means that we need to increase number length
                 if still_needed:
-                    self.num.append(1)
-                    for i in range(0, len(self.num) - 1):
+                    for i in range(len(self.num)):
                         self.num[i] = 0
-                    still_needed = sum_needed - 1
+                    self.num.append(1)
+                    still_needed = needed - 1
 
-        def make_suffix_value():
-            current_value = self.value
-            reminder = current_value % FACTORIALS[9]
-            if reminder:
-                self.num = list(digits_gen(current_value + FACTORIALS[9] - reminder))
-            return self.suffix_digits_sum()
-
-        # Get next suffix value [one 9 digit more so sum is increase by 9!]
-        next_value = self.value + FACTORIALS[9]
+        # Get next f_value with self.sum
+        self.cost = 0
+        next_value = self.value + 1
+        # skip all numbers with sum of digits greater than required
+        while digits_sum(next_value) > self.sum:
+            next_value += 1
+            self.cost += 1
         self.num = list(digits_gen(next_value))
-        suffix_sum = self.suffix_digits_sum()
-
-        while suffix_sum < self.sum:
-            next_value_with_sum(self.sum)
-            suffix_sum = make_suffix_value()
-
-        self.sum = suffix_sum
-        self.suffix = self.num[:]
-        assert self.value % FACTORIALS[9] == 0
-        self.n = self.value // FACTORIALS[9]
-        self.prefix = [0]
+        # increase number until we get number with required digits sum
+        get_value_with_sum(self.sum)
 
 ```
 
-The base algorithm for finding sequence of g(i):
+For computing number n from f(n) we need to define reverse_f function.
+We know that n is composed of prefix and suffix with contains only digits 9, 
+so we define N_Number tuple, function reverse_f and function which takes 
+two N_Number's and returns smaller one.
+
 ```python
-def g_sequence(max_i):
+N_Number = namedtuple("N_Number", "prefix suffix_len")
+
+
+def reverse_f(f_value):
+    suffix_len, f_prefix = divmod(f_value, FACTORIALS[9])
+    prefix = PREFIX[f_prefix]
+    return N_Number(prefix, suffix_len)
+
+def smaller_n(n1, n2):
+    p1, s1 = n1
+    p2, s2 = n2
+    p1l = len(str(p1)) + s1
+    p2l = len(str(p2)) + s2
+    if p1l < p2l:
+        return n1
+    elif p1l > p2l:
+        return n2
+    p1 = p1.ljust(36, '9')
+    p2 = p2.ljust(36, '9')
+    if p1 <= p2:
+        return n1
+    else:
+        return n2
+
+```
+
+
+Our new g_sequence function for given i creates iterator returning numbers 
+with digits sum, keeps the best_n until stop conditions occurs.
+
+```python
+def g_sequence(max_i, *, mod=None):
     """
     Looks for g(i) in range 1..max_i
     Define g(i) to be the smallest positive integer n such that sf(n) == i.
-    Results are in a global cached dictionary
     sf(342) = 5, also sf(25) = 5 and 25 is the smallest number giving sf(i) = 5, so g(5) = 25
+    As n start be huge numbers - million and more digits we store in cache sg(n) which is digits sum of n
+    Results are in a global cached dictionary
     :param max_i: range for compute g(i) from 1 to max_i
     :return: None
     """
 
-    def g_find(f_number, *, max_cnt=None):
-        """
-        Founds n such that sf(n) == i
-        :param f_number: suffix starting f(n) with n being suffix with f_number. n - 9 digits
-        :param max_cnt: optional limit early stop if n not found based on amount of '9' digits
-        :return: tuple <prefix value>, prefix len, suffix, len
-                    if not found returns None, None, max_cnt
-        """
-        cost = 0
-        while max_cnt is None or f_number.n < max_cnt:
-            # exit in case of limit for amount of '9' digits in suffix
-            cost += 1
-            f_sum = f_number.digits_sum()
-            if f_sum == i:
-                # found sf(n) = i, where n contains only digits 9
-                print(f'cost: {cost:12}, len={f_number.n:6}, g({i}) = 9*{f_number.n}')
-                return 0
-
-            needed_prefix_sum = i - f_sum
-            prefix_part_sum = sum(f_number.num[0:6])
-            max_prefix_sum = 47 - prefix_part_sum
-            if max_prefix_sum < needed_prefix_sum or f_sum > i:
-                # print(f'Too small prefix for i={i}  with 9*{n_cnt} and missing digits sum={needed_prefix_sum}')
-                f_number.next()
-                continue
-
-            prefixes = PREFIXES.get(needed_prefix_sum, [])
-            for prefix in prefixes:
-                cost += 1
-                if digits_sum(f_number.value + f(prefix)) == i:
-                    print(
-                        f'cost: {cost:12}, len={len(str(prefix)) + f_number.n:6}, '
-                        f'g({i}) = {str(prefix)}+9*{f_number.n}')
-                    return prefix
-            if prefixes:
-                pass
-                print(f'Not found matched prefix for i={i} with 9*{f_number.n} '
-                      f'and missing digits sum={needed_prefix_sum}')
-            else:
-                pass
-                print(f'Missing prefix for i={i}  with 9*{f_number.n} and missing digits sum={needed_prefix_sum}')
-            f_number.next()
-        # Not found sf(n) = i when d9_counter < max_cnt
-        return None
-
-    suffix = FDigits(0)
     for i in range(1, max_i + 1):
-        more_results = False
-        prefix = g_find(suffix)
-        current_len = len(str(prefix)) + suffix.n
-        current_suffix = FDigits(suffix)
-        suffix.next()
-        while suffix.n <= current_len:
-            tmp_prefix = g_find(suffix, max_cnt=current_len)
-            if tmp_prefix is not None:
-                more_results = True
-                tmp_len = len(str(tmp_prefix)) + suffix.n
-                if tmp_len < current_len:
-                    prefix = tmp_prefix
-                    current_suffix = FDigits(suffix)
-            suffix.next()
+        if sg_cache.get(i):
+            continue
+        equal_sum_numbers = FDigits(i)
+        first_value = next(equal_sum_numbers).value
+        cost = equal_sum_numbers.cost
+        best_n = reverse_f(first_value)
+        best_f = first_value
+        for number in equal_sum_numbers:
+            cost += number.cost
+            n = reverse_f(number.value)
+            best_n = smaller_n(best_n, n)
+            if best_n == n:
+                best_f = number.value
+            # print(f'Best value is {best_n.prefix} {best_n.suffix_len}')
+            if n.suffix_len >= best_n.suffix_len + len(best_n.prefix):
+                break
+        if DEBUG:
+            l_str = str(len(str(best_n.prefix)) + best_n.suffix_len)
+            if len(l_str) > 19:
+                l_str = '...'+l_str[-16:]
+            prefix = ''
+            if best_n.prefix:
+                prefix = best_n.prefix + '+'
+            print(
+                f'cost: {cost:12}, len={l_str:21}, f(n) = {best_f:40}, '
+                f'g({i}) = {prefix}9*{best_n.suffix_len}')
+        sg_cache[i] = digits_sum(best_n.prefix) + 9 * best_n.suffix_len
+        if mod:
+            sg_cache[i] = sg_cache[i] % mod
+        g_cache[i] = best_n
+    return
 
-        # This make memory overflow        
-        # sf_cache[i] = str(prefix) + '9' * current_suffix.n
-        sf_cache[i] = digits_sum(prefix) + 9 * current_suffix.n
-        if more_results:
-            print(f'Best result for i={i} is {str(prefix)}+9*{current_suffix.n}')
-        suffix = current_suffix
-    return sf_cache
-
-
-def sg(i):
-    """
-    Define  sg(i) as the sum of the digits of g(i).
-    So sg(5) = 2 + 5 = 7 as g(5) = 25.
-    :param i:
-    :return: sum digits of g(i)
-    """
-    if sf_cache.get(i) is None:
-        g_sequence(i)
-    return int(sf_cache[i])
 ```
 
-The last thing is changing the way how we store n for g(i).
-Until now, we stored n as a string which fails when store result of g(130):
-
-```commandline
-cost:          155, len=2755731929, g(128) = 2356668+9*2755731922
-cost:           57, len=5511463851, g(129) = 4466788+9*5511463844
-Traceback (most recent call last):
-  File "C:\python\hackerrank-euler\euler\euler_day_03.py", line 358, in <module>
-    total = sum_sg(nn)
-  File "C:\python\hackerrank-euler\euler\euler_day_03.py", line 342, in sum_sg
-    g_sequence(n)
-  File "C:\python\hackerrank-euler\euler\euler_day_03.py", line 308, in g_sequence
-    sf_cache[i] = str(prefix) + '9' * current_suffix.n
-MemoryError
-```
+Result of running our new algorithm is:
 ```python
-def sg(i):
-    """
-    Define  sg(i) as the sum of the digits of g(i).
-    So sg(5) = 2 + 5 = 7 as g(5) = 25.
-    :param i:
-    :return: sum digits of g(i)
-    """
-    if sf_cache.get(i) is None:
-        g_sequence(i)
-    return int(sf_cache[i])
+cost:       999993, len=1                    , f(n) =                                        1, g(1) = 1+9*0
+cost:       999978, len=1                    , f(n) =                                        2, g(2) = 2+9*0
+cost:       999937, len=1                    , f(n) =                                      120, g(3) = 5+9*0
+cost:       999846, len=2                    , f(n) =                                      121, g(4) = 15+9*0
+cost:       999664, len=2                    , f(n) =                                      122, g(5) = 25+9*0
+cost:       399350, len=1                    , f(n) =                                        6, g(6) = 3+9*0
+cost:       998746, len=2                    , f(n) =                                        7, g(7) = 13+9*0
+cost:       797789, len=2                    , f(n) =                                        8, g(8) = 23+9*0
+cost:       396618, len=1                    , f(n) =                                      720, g(9) = 6+9*0
+cost:       724020, len=2                    , f(n) =                                      721, g(10) = 16+9*0
+cost:       720720, len=2                    , f(n) =                                      722, g(11) = 26+9*0
+cost:       716069, len=2                    , f(n) =                                       48, g(12) = 44+9*0
+cost:      1064671, len=3                    , f(n) =                                       49, g(13) = 144+9*0
+cost:      1054149, len=3                    , f(n) =                                      842, g(14) = 256+9*0
+cost:       686354, len=2                    , f(n) =                                      726, g(15) = 36+9*0
+cost:      1023277, len=3                    , f(n) =                                      727, g(16) = 136+9*0
+cost:      1001965, len=3                    , f(n) =                                      728, g(17) = 236+9*0
+cost:       635277, len=2                    , f(n) =                                     5760, g(18) = 67+9*0
+cost:       944651, len=3                    , f(n) =                                     5761, g(19) = 167+9*0
+cost:       909210, len=3                    , f(n) =                                     5762, g(20) = 267+9*0
+cost:       868881, len=3                    , f(n) =                                   362910, g(21) = 34+9*1
+cost:      1085786, len=4                    , f(n) =                                   362911, g(22) = 134+9*1
+cost:      1017371, len=4                    , f(n) =                                   362912, g(23) = 234+9*1
+cost:       441706, len=2                    , f(n) =                                   362904, g(24) = 4+9*1
+cost:       665237, len=3                    , f(n) =                                   362905, g(25) = 14+9*1
+cost:       607147, len=3                    , f(n) =                                   362906, g(26) = 24+9*1
+cost:       116408, len=1                    , f(n) =                                   362880, g(27) = 9*1
+cost:       276800, len=2                    , f(n) =                                   362881, g(28) = 1+9*1
+cost:       237689, len=2                    , f(n) =                                   362882, g(29) = 2+9*1
+cost:       374124, len=3                    , f(n) =                                   362883, g(30) = 12+9*1
+cost:       320743, len=3                    , f(n) =                                   362884, g(31) = 22+9*1
+cost:       335883, len=4                    , f(n) =                                   362885, g(32) = 122+9*1
+cost:       109250, len=2                    , f(n) =                                   362886, g(33) = 3+9*1
+cost:       184626, len=3                    , f(n) =                                   362887, g(34) = 13+9*1
+cost:       148620, len=3                    , f(n) =                                   362888, g(35) = 23+9*1
+cost:       139380, len=4                    , f(n) =                                   362889, g(36) = 123+9*1
+cost:       157346, len=5                    , f(n) =                                   362899, g(37) = 1333+9*1
+cost:       119112, len=5                    , f(n) =                                   725888, g(38) = 235+9*2
+cost:        58812, len=4                    , f(n) =                                   367968, g(39) = 447+9*1
+cost:        63681, len=5                    , f(n) =                                   367969, g(40) = 1447+9*1
+cost:        71714, len=7                    , f(n) =                                   368888, g(41) = 235567+9*1
+cost:        45232, len=6                    , f(n) =                                   367998, g(42) = 34447+9*1
+cost:        33655, len=7                    , f(n) =                                   367999, g(43) = 134447+9*1
+cost:        22025, len=7                    , f(n) =                                   488888, g(44) = 237888+9*1
+cost:        20992, len=8                    , f(n) =                                   488889, g(45) = 1237888+9*1
+cost:        16082, len=9                    , f(n) =                                   488899, g(46) = 13337888+9*1
+cost:        10646, len=10                   , f(n) =                                   887888, g(47) = 23568888+9*2
+cost:         9934, len=11                   , f(n) =                                   887889, g(48) = 123568888+9*2
+cost:         6133, len=12                   , f(n) =                                   887899, g(49) = 1333568888+9*2
+cost:         6315, len=14                   , f(n) =                                   897989, g(50) = 122456778888+9*2
+cost:         3396, len=14                   , f(n) =                                   889998, g(51) = 344466668888+9*2
+cost:         1715, len=15                   , f(n) =                                   889999, g(52) = 1344466668888+9*2
+cost:         1715, len=17                   , f(n) =                                  2988989, g(53) = 122455788+9*8
+cost:          799, len=18                   , f(n) =                                  2988999, g(54) = 1233455788+9*8
+cost:          470, len=19                   , f(n) =                                  3998899, g(55) = 13336667+9*11
+cost:          792, len=23                   , f(n) =                                  3999989, g(56) = 122455566667+9*11
+cost:          358, len=24                   , f(n) =                                  3999999, g(57) = 1233455566667+9*11
+cost:          330, len=25                   , f(n) =                                  6899899, g(58) = 133357+9*19
+cost:          330, len=30                   , f(n) =                                  7989989, g(59) = 12245667+9*22
+cost:          120, len=31                   , f(n) =                                  7989999, g(60) = 123345667+9*22
+cost:           36, len=32                   , f(n) =                                  7999999, g(61) = 1344466777+9*22
+cost:            8, len=41                   , f(n) =                                  9999989, g(62) = 12245555588888+9*27
+cost:            1, len=42                   , f(n) =                                  9999999, g(63) = 123345555588888+9*27
+cost:            1, len=66                   , f(n) =                                 19999999, g(64) = 13444555568+9*55
+cost:            1, len=103                  , f(n) =                                 29999999, g(65) = 122333444455566888888+9*82
+cost:            1, len=123                  , f(n) =                                 39999999, g(66) = 1233455566688+9*110
+cost:            1, len=155                  , f(n) =                                 49999999, g(67) = 134445566668888888+9*137
+cost:            1, len=184                  , f(n) =                                 59999999, g(68) = 1223334444566666888+9*165
+cost:            1, len=212                  , f(n) =                                 69999999, g(69) = 12334566666688888888+9*192
+cost:            1, len=230                  , f(n) =                                 79999999, g(70) = 1344478888+9*220
 ```
-Now we can see:
-sum_sg(2000) is 272817460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460317460519218 
-computed in 5708.60 seconds.
+
+As you can see initial steps until i = 62 are very costly and slow.
+Starting from i=63 finding n such that g(i) = n takes only one step.
+
+sum_sg(20000) is computed in 144.58 seconds
+
 
 To verify is this is correct please register on [Project Euler](https://projecteuler.net) web page.
 Go to problem 254 and enter value for sum of sg for 150.
-But on HackerRank problem is more difficult you - you must build solution which is fast 
-enough to pass the tests.
+But on HackerRank problem is more difficult you - you must build solution 
+which is fast enough to pass the tests.
+
+On next day we will try join the best part of Day 2 and Day 3 solutions.
 
 ##Day 4
-The first time we receive algorithm which which is still very slow 
-but can compute g(i) for i 
-up to thousands.
+The first time we receive algorithm which is slow 
+but can compute g(i) for i = 20,000 in lest than 3 minutes.
 
-The solution built is not easy to build and test and fix 
-especially for small i.
+The last solution is very slow for small i. 
+We can also notice that f value pattern is random especially at the beginning 
+and above i=63 is very regular.
+
 
 The reason behind is the prefix/suffix interaction. For small i, 
-the prefix part summed up with suffix(missing or very small) 
-introduce huge noise as both parts are very irregular - 
+the prefix part summed up with suffix(which is missing or very small) 
+introduce huge noise as both parts are very irregular and comparable - 
 increase and decrease very rapidly.
-Later on impact of P
+Later on impact of 
 prefix part is negligible as 
-distance between two n's having the same sum is bigger than 36 - 
-length of suffix. That makes always only one solution with given sum size i as the next  
-solution the nearest n having required sum size.
+distance between two n's having the same digit sum or greater digits sum 
+start to be bigger and bigger. Max prefix length is 36, so as a result 
+from i=63 g(i) function behavior is very regular.
+
+For speed up our algorithm we initialize the first 200 values of g(i) 
+at the beginning and start to compute g(i) from bigger values.
+
+There is need for only 117 prefixes for building n when i>63, 
+so we  initialized them as PREFIX table.
+
+We can build n such that g(i) = n in one step, so 
+we remove FDigits class and stay with function which gives 
+us f_value and reverse function for getting n.
+
+Function g_sequence is very simple now - no need for scan and find best_n. 
+We always get it in one ste.
+
+
+```python
+def reverse_f(f_value):
+    suffix_len, f_prefix = divmod(f_value, FACTORIALS[9])
+    prefix = PREFIX[f_prefix]
+    PREFIX_USED[f_prefix] = prefix
+    return N_Number(prefix, suffix_len)
+
+
+def build_f_value_with(digits_sum):
+    """ Build suffix which gives g(i) = i """
+    n9, d = divmod(digits_sum, 9)
+    if d == 0:
+        return '9' * n9
+    else:
+        return chr(d+ord('0')) + '9' * n9
+
+
+def g_sequence(max_i):
+    """
+    Looks for g(i) in range 1..max_i
+    Define g(i) to be the smallest positive integer n such that sf(n) == i.
+    sf(342) = 5, also sf(25) = 5 and 25 is the smallest number giving sf(i) = 5, so g(5) = 25
+    As n start be huge numbers - million and more digits we store in cache sg(n) which is digits sum of n
+    Results are in a global cached dictionary
+    :param max_i: range for compute g(i) from 1 to max_i
+    :return: None
+    """
+
+    for i in range(1, max_i + 1):
+        if sg_cache.get(i):
+            continue
+        f_value = build_f_value_with(i)
+        best_n = reverse_f(int(f_value))
+        if DEBUG:
+            l_str = str(len(str(best_n.prefix)) + best_n.suffix_len)
+            if len(l_str) > 19:
+                l_str = '...'+l_str[-16:]
+            prefix = best_n.prefix + '+'
+            print(
+                f'len={l_str:21}, f(n) = {f_value:40}, '
+                f'g({i}) = {prefix}9*{best_n.suffix_len}')
+        sg_cache[i] = digits_sum(best_n.prefix) + 9 * best_n.suffix_len
+        g_cache[i] = best_n
+    return
+```
+
+sum_sg(50000) has length 5552 last digits are 126984132135059 computed in 4.09 seconds
+sum_sg(100000) has length 11108 last digits are 269841280147918 computed in 27.90 seconds
+
+We can see now that computing sum up to 50,000 is 4 sec, up to 100,000 is 27 sec.
+
+Let's verify this using profiler.
+
+```python
+def profile_main(size=200):
+    with cProfile.Profile() as pr:
+        init_prefixes()
+        sum_sg(size)
+
+    s = io.StringIO()
+    sort_by = pstats.SortKey.CUMULATIVE
+    ps = pstats.Stats(pr, stream=s).sort_stats('tottime')
+    ps.print_stats()
+    print(s.getvalue())
+```
+
+
+
+
+sum_sg(50000) has length 5552 last digits are 126984132135059 computed in 4.09 seconds
+sum_sg(100000) has length 11108 last digits are 269841280147918 computed in 27.90 seconds
+
 
 
 
