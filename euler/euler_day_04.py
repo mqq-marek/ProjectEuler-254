@@ -60,7 +60,7 @@ def reverse_f(f_value):
     return N_Number(prefix, suffix_len)
 
 
-def build_f_value_with(digits_sum):
+def f_value_with_digit_sum(digits_sum):
     """ Build suffix which gives g(i) = i """
     n9, d = divmod(digits_sum, 9)
     if d == 0:
@@ -135,7 +135,7 @@ def g_sequence(max_i):
     for i in range(1, max_i + 1):
         if i < 65:
             continue
-        f_value = int(build_f_value_with(i))
+        f_value = int(f_value_with_digit_sum(i))
         best_n = reverse_f(f_value)
         if DEBUG:
             l_str = str(len(str(best_n.prefix)) + best_n.suffix_len)
@@ -231,12 +231,14 @@ def make_sgi_mod_table(base_value=181):
     dv = defaultdict(set)
     dist = set()
     for i in range(base_value, 50001):
-        x, y, z = find_fn(i)
-        dist.add(z)
-        if y * 9 > 1000000000000:
-            v = y * 9 % 1000000000000
-            dv[z].add(v)
-        di[z].append(i)
+        f_v = int(f_value_with_digit_sum(i))
+        n = reverse_f(f_v)
+        d = f_v % FACTORIALS[9]
+        dist.add(d)
+        if n.suffix_len * 9 > 1000000000000:
+            v = n.suffix_len * 9 % 1000000000000
+            dv[d].add(v)
+        di[d].append(i)
     distances = sorted(list(dist))
 
     dic = {}
@@ -267,11 +269,12 @@ def make_sgi_mod_table(base_value=181):
             dic[p + step] = (d, step)
 
     sgi_mod_table = []
-    for i, p, (d, s) in enumerate(sorted(dic.items())):
+    for p, (d, s) in sorted(dic.items()):
         carry_on = 0
-        if i > 0 and d < :
-            carry_on = if True else False
-        sgi_mod_table.append((p, d, PREFIX[d], sf(PREFIX[d])))
+        prev = p-1 if p!=min_pos else max_pos
+        if d < dic[prev][0]:
+            carry_on = 1
+        sgi_mod_table.append((p, d, PREFIX[d], digits_sum(PREFIX[d]), carry_on))
     return sgi_mod_table
 
 
@@ -291,9 +294,9 @@ def show_suffix_list():
                 print(f"'9'*{i}\t{i*FACTORIALS[9]}\t{digits_sum(i*FACTORIALS[9])}\t{i}")
 
 def print_const_tables():
-    g_table = [int(g.prefix + ('9'*g.suffix_len)) for g in dic_as_list(g_cache)]
-    print(f'g_table = {g_table}')
-    # print(f'sg_table = {dic_as_list(sg_cache)}')
+    #g_table = [int(g.prefix + ('9'*g.suffix_len)) for g in dic_as_list(g_cache)]
+    #print(f'g_table = {g_table}')
+    print(f'sg_table = {dic_as_list(sg_cache)}')
     #prefixes = [f(p) for p in dic_as_list(PREFIX)]
     #print(f'PREFIX = {prefixes}')
     print(f'PREFIX = {PREFIX_USED}')
@@ -342,7 +345,7 @@ if __name__ == "__main__":
     DEBUG = True
     # hacker_main()
     # profile_main(20000)
-    development_main(1000)
+    development_main(500)
     exit()
 
 """
