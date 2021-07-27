@@ -939,6 +939,104 @@ sum_sg(500000) has length 12 last digits are 412749963545 computed in 43.34 seco
 Expected result need to have value mod m, 
 then  we introduce modulo arithmetic which prevent us to use huge numbers.
 
+```python
+def sum_sg_mod(n, m):
+    def verify_elem(val, i):
+        """ Verify sg(i) elements build here against values in sg_table. """
+        if i <= len(sg_table):
+            if val % m != sg_table[i-1] % m:
+                print(f"bad value for sg({i}. Expected {sg_table[i-1]}, received {val}")
+
+    def get_sg(i, m):
+        """ Compute sg(i) based on previous sg(i-1).
+            nonlocal variables used for keeping previous sg(i-1) info:
+                n9_step - numbers of 9 digits which increment g(i) value. n9step is the same for 9 successive i values
+                starting with value where i % 9 == 1 (f_value 19999..)
+                n9_sum - digits sum of suffix part = 9 * n9_step + 9 * carry. carry is precomputed and taken from table
+                sg_n9_sum - digits sum of suffix from previous g value
+        """
+        nonlocal n9_step, n9_sum, sg_n9_sum
+
+        """
+        sgi_mod_table is 162 element table which keeps cycle information when operate on F_values.
+        elements contains tuple with following information
+            [0] - i value % 162 + 162
+            [1] - f_value % 9! [f_value % 9! has cycle 162]
+            [2] - PREFIX for given f_value % 9!
+            [3] - sum digits of PREFIX
+            [4] - carry = 1 if current f_value % 9! is smaller than previous one. In such situation:
+                f_value // 9! - f_value_prev // 9! = (f_value - f_value_prev) // 9! + 1(carry)
+            [5] - step increase - additional increase of number of 9 in suffix when go to f_value longer by 1 digit.
+                Again lake for carry its cumulative increase of quotient based on (previous_reminder * 10) % 9!. 
+                Proper value is 10 elements back comparing current element (i - 10) % 162
+        """
+        i_ = i % len(sgi_mod_table)
+        sf_prefix = sgi_mod_table[i_][3]
+        carry = sgi_mod_table[i_][4]
+
+        ''' When f_value starts with 1 it means that we have 1 digit longer f_value. '''
+        if i % 9 == 1:
+            step_increase = sgi_mod_table[(i-10) % len(sgi_mod_table)][5]
+            # print(f'n9_step inc = {inc}, rem: {n9_rem}')
+            n9_step = (10 * n9_step + step_increase) % m
+            n9_sum = n9_step * 9 % m
+
+        sg_n9_sum = (sg_n9_sum + n9_sum + 9 * carry ) % m
+        sg_ = (sg_n9_sum + sf_prefix) % m
+
+        verify_elem(sg_, i)
+        return sg_
+
+    ''' 
+    Split sg_table at position cache_limit.
+        The first part used for setting up initial values of sg(i). Minimum 70 is required.
+        The second part is used for verifying result of new get_sg against data in sg_table.
+    '''
+    cache_limit = min(204, len(sg_table))
+    s = 0
+    s = sum(sg_table[:min(cache_limit, n)]) % m
+
+    ''' Initialize n9_step, n9_sum, sg_n9_sum for i = cache_limit. '''
+    f_value = f_value_with_digit_sum(cache_limit)
+    nn = reverse_f(int(f_value))
+    f_value_step = int(f_value[1:]) + 1
+    n9_step = f_value_step // F9 % m
+    n9_sum = n9_step * 9 % m
+    sg_n9_sum = nn.suffix_len * 9 % m
+
+    ''' Start compute from i = cache_limit + 1. '''
+    for i in range(cache_limit + 1, n + 1):
+        s = (s + get_sg(i, m)) % m
+    return s
+```
+
+After introduce mod m arithmetic:
+sum_sg(500000) has length 12 last digits are 412749963545 computed in 1.30 seconds
+sum_sg(5000000) has length 12 last digits are 270356820724 computed in 6.22 seconds
+sum_sg(50000000) has length 12 last digits are 989282535332 computed in 68.57 seconds
+
+Not time is linear - proportional to i.
+It's great increase in speed comparing initial 10 ** 10 ** i.
+
+
+##Day 6
+
+Base on description we will have the data size in range:
+
+1 <= i <= 10**18
+Empty loop in Python which has 10**9 repetition takes around 50 
+seconds, so 10**18 repetition loop takes more than 10,000 days.
+
+Until now, we work on finding the fastest way for guessing g(i).
+That does not work, so we need to work on finding directly of sum_sg 
+without need to compute earlier every g(i) in the given range 
+and sum them.
+
+
+
+
+
+
 
 
 

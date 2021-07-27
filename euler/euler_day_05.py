@@ -160,7 +160,7 @@ def sum_sg_mod(n, m):
     def verify_elem(val, i):
         """ Verify sg(i) elements build here against values in sg_table. """
         if i <= len(sg_table):
-            if val != sg_table[i-1]:
+            if val % m != sg_table[i-1] % m:
                 print(f"bad value for sg({i}. Expected {sg_table[i-1]}, received {val}")
 
     def get_sg(i, m):
@@ -194,11 +194,11 @@ def sum_sg_mod(n, m):
         if i % 9 == 1:
             step_increase = sgi_mod_table[(i-10) % len(sgi_mod_table)][5]
             # print(f'n9_step inc = {inc}, rem: {n9_rem}')
-            n9_step = (10 * n9_step + step_increase)
-            n9_sum = n9_step * 9
+            n9_step = (10 * n9_step + step_increase) % m
+            n9_sum = n9_step * 9 % m
 
-        sg_n9_sum += n9_sum + 9 * carry
-        sg_ = sg_n9_sum + sf_prefix
+        sg_n9_sum = (sg_n9_sum + n9_sum + 9 * carry ) % m
+        sg_ = (sg_n9_sum + sf_prefix) % m
 
         verify_elem(sg_, i)
         return sg_
@@ -216,9 +216,9 @@ def sum_sg_mod(n, m):
     f_value = f_value_with_digit_sum(cache_limit)
     nn = reverse_f(int(f_value))
     f_value_step = int(f_value[1:]) + 1
-    n9_step = f_value_step // F9
-    n9_sum = n9_step * 9
-    sg_n9_sum = nn.suffix_len * 9
+    n9_step = f_value_step // F9 % m
+    n9_sum = n9_step * 9 % m
+    sg_n9_sum = nn.suffix_len * 9 % m
 
     ''' Start compute from i = cache_limit + 1. '''
     for i in range(cache_limit + 1, n + 1):
@@ -379,21 +379,24 @@ def development_main(size=200, mod=None):
 
 
 if __name__ == "__main__":
-    DEBUG = True
+    # DEBUG = True
     # hacker_main()
     # profile_main(20000)
-    development_main(500000, 1000000000000)
+    development_main(50000000, 1000000000000)
     exit()
 
 """
 
-Before sq working with mod
+Initial release
 sum_sg(500) has length 12 last digits are 412698459839 computed in 0.00 seconds
 sum_sg(5000) has length 12 last digits are 269841780640 computed in 0.02 seconds
 sum_sg(50000) has length 12 last digits are 984132135059 computed in 0.81 seconds
 sum_sg(500000) has length 12 last digits are 412749963545 computed in 43.34 seconds
 
-
+After introduce mod m arithmetic:
+sum_sg(500000) has length 12 last digits are 412749963545 computed in 1.30 seconds
+sum_sg(5000000) has length 12 last digits are 270356820724 computed in 6.22 seconds
+sum_sg(50000000) has length 12 last digits are 989282535332 computed in 68.57 seconds
 
 """
 
