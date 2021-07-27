@@ -345,11 +345,13 @@ if __name__ == "__main__":
     DEBUG = True
     # hacker_main()
     # profile_main(20000)
-    development_main(500)
+    development_main(100)
     exit()
 
 """
 sum_sg(500) has length 52 last digits are 698412698459839 computed in 0.02 seconds
+sum_sg(50000) has length 5552 last digits are 126984132135059 computed in 4.09 seconds
+sum_sg(100000) has length 11108 last digits are 269841280147918 computed in 27.90 seconds
 
 """
 

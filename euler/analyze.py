@@ -48,6 +48,7 @@ def init_prefixes():
 
 FACTORIALS = [math.factorial(i) for i in range(10)]
 FACTORIAL9_DIGITS = [d for d in digits_gen(FACTORIALS[9])]
+F9 = FACTORIALS[9]
 
 def find_fn(digits_sum):
     for i_str in gen_prospect_fn(digits_sum):
@@ -242,8 +243,19 @@ def digits_sum(n):
 n9mod = {}
 
 if __name__ == '__main__':
+    number = 1
+    for i in range(10000):
+        mod = number % F9
+        number = number * 10
+        # print(f"mod={mod:6}, i={i:100}")
+        if mod == 202240:
+            print(f"mod={mod:6}, i={i:100}")
+    exit()
+
+
     init_prefixes()
     for i in range(90, 101):
+
         fn, n9, d = find_fn(i)
         print(f'g({i}) = {PREFIX_V[d]}+9*{n9}')
     exit()

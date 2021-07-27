@@ -816,6 +816,136 @@ def profile_main(size=200):
 
 sum_sg(50000) has length 5552 last digits are 126984132135059 computed in 4.09 seconds
 sum_sg(100000) has length 11108 last digits are 269841280147918 computed in 27.90 seconds
+Execution time increased too fast for our task.
+
+That is because of processed values has huge amount of digits and cost of 
+operation growing faster than linear.
+
+##Day 5
+
+Today we try to decrease time of computing sg(i).
+
+Computing sg(i) looks in the following way:
+- build the first f_value which has i digits (i: 10-> 19, i: 71->89999999)
+- find n as: :
+  - suffix which contains (f_value // 9!)  digits '9'
+  - prefix which sum of factorial digits is: f_value % 9!
+- build sg as sum of digits n: 9 * (f_value // 9!) + digits_sum(prefix)
+
+Number of digits of f_value increased fas. For i = 500 F_value has 56 digits 
+so cost od operations on such numbers start to be high.
+
+Let's look at the F_values base on increasing order of i:
+76: 499999999
+77: 599999999, increase: 100000000
+78: 699999999, increase: 100000000
+79: 799999999, increase: 100000000
+80: 899999999, increase: 100000000
+81: 999999999, increase: 100000000
+82:1999999999, increase:1000000000
+83:2999999999, increase:1000000000
+
+So we can compute sg(i+1) as sum of:
+- digits_sum(prefix for i+1) - we can eliminate computing f_value % 9! and 
+  make 162 elements prefix table as prefixes goes in cycle of i % 162
+- 9*numbers of digits 9 in sg(i)
+- additional amount of 9 digits based on increase value (increase // 9!) - 
+  we have divide operation here, but we can do it once every 9 
+  steps as 9 increases 
+  are the same next we have next 9 increases 10 times higher
+- carry which is 0 or 1. Integer divide and modulo gives 1 increase 
+  when divide when remainder is smaller than in previous step. 
+  Again it is base 162 elements cyle, when dividing f_value by 9!, so we keep this value in the same table.
+
+``` python
+def sum_sg_mod(n, m):
+    def verify_elem(val, i):
+        """ Verify sg(i) elements build here against values in sg_table. """
+        if i <= len(sg_table):
+            if val != sg_table[i-1]:
+                print(f"bad value for sg({i}. Expected {sg_table[i-1]}, received {val}")
+
+    def get_sg(i, m):
+        """ Compute sg(i) based on previous sg(i-1).
+            nonlocal variables used for keeping previous sg(i-1) info:
+                n9_step - numbers of 9 digits which increment g(i) value. n9step is the same for 9 successive i values
+                starting with value where i % 9 == 1 (f_value 19999..)
+                n9_sum - digits sum of suffix part = 9 * n9_step + 9 * carry. carry is precomputed and taken from table
+                sg_n9_sum - digits sum of suffix from previous g value
+        """
+        nonlocal n9_step, n9_sum, sg_n9_sum
+
+        """
+        sgi_mod_table is 162 element table which keeps cycle information when operate on F_values.
+        elements contains tuple with following information
+            [0] - i value % 162 + 162
+            [1] - f_value % 9! [f_value % 9! has cycle 162]
+            [2] - PREFIX for given f_value % 9!
+            [3] - sum digits of PREFIX
+            [4] - carry = 1 if current f_value % 9! is smaller than previous one. In such situation:
+                f_value // 9! - f_value_prev // 9! = (f_value - f_value_prev) // 9! + 1(carry)
+            [5] - step increase - additional increase of number of 9 in suffix when go to f_value longer by 1 digit.
+                Again lake for carry its cumulative increase of quotient based on (previous_reminder * 10) % 9!. 
+                Proper value is 10 elements back comparing current element (i - 10) % 162
+        """
+        i_ = i % len(sgi_mod_table)
+        sf_prefix = sgi_mod_table[i_][3]
+        carry = sgi_mod_table[i_][4]
+
+        ''' When f_value starts with 1 it means that we have 1 digit longer f_value. '''
+        if i % 9 == 1:
+            step_increase = sgi_mod_table[(i-10) % len(sgi_mod_table)][5]
+            # print(f'n9_step inc = {inc}, rem: {n9_rem}')
+            n9_step = (10 * n9_step + step_increase)
+            n9_sum = n9_step * 9
+
+        sg_n9_sum += n9_sum + 9 * carry
+        sg_ = sg_n9_sum + sf_prefix
+
+        verify_elem(sg_, i)
+        return sg_
+
+    ''' 
+    Split sg_table at position cache_limit.
+        The first part used for setting up initial values of sg(i). Minimum 70 is required.
+        The second part is used for verifying result of new get_sg against data in sg_table.
+    '''
+    cache_limit = min(204, len(sg_table))
+    s = 0
+    s = sum(sg_table[:min(cache_limit, n)]) % m
+
+    ''' Initialize n9_step, n9_sum, sg_n9_sum for i = cache_limit. '''
+    f_value = f_value_with_digit_sum(cache_limit)
+    nn = reverse_f(int(f_value))
+    f_value_step = int(f_value[1:]) + 1
+    n9_step = f_value_step // F9
+    n9_sum = n9_step * 9
+    sg_n9_sum = nn.suffix_len * 9
+
+    ''' Start compute from i = cache_limit + 1. '''
+    for i in range(cache_limit + 1, n + 1):
+        s = (s + get_sg(i, m)) % m
+    return s
+```
+
+Now algorithm is fast but later on when numbers starts 
+to have huge amount of digits is slow.
+
+sum_sg(500) has length 12 last digits are 412698459839 computed in 0.00 seconds
+sum_sg(5000) has length 12 last digits are 269841780640 computed in 0.02 seconds
+sum_sg(50000) has length 12 last digits are 984132135059 computed in 0.81 seconds
+sum_sg(500000) has length 12 last digits are 412749963545 computed in 43.34 seconds
+
+Expected result need to have value mod m, 
+then  we introduce modulo arithmetic which prevent us to use huge numbers.
+
+
+
+
+
+
+
+
 
 
 
