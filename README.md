@@ -1032,6 +1032,48 @@ That does not work, so we need to work on finding directly of sum_sg
 without need to compute earlier every g(i) in the given range 
 and sum them.
 
+To solve this we need to use mathematical approach.
+
+Based ides is to find the sum of the sum_sg_range(i, j) in one step.
+
+sg(i) is sum digits of lowest n such that g(i) = n. 
+N is composed of prefix (build from digits form 
+1 to 8 - max length 36 digits) and suffix - huge amount of digits 9.
+For prefix, we already noticed that the appears in some order with 
+cycle having 162 elements. 
+
+More difficult is to find how amount of digits 9 increases in some range.
+
+The easiest way which very frequently works is to find formula 
+for next sum based on previous one,
+
+The approach which works here after detailed analysis of the data:
+- Take some starting point and frame which are based for our approach 
+- for i in range(start, start + frame) sum all digits 9 fo g(i) in 
+  this range
+- next repeat the same for few next steps 
+  range(start+frame, start+2*frame) and so on
+- try to find something which allows you 
+  to describe sum of next frame as combination of previous frame sum.
+  That is possible that you need to work with different frame size and 
+  start point.
+- You need to find some rules which will define sum_sg(i+1) as 
+  some combinations of earlier step. Something similar to 
+  recurrent definition of factorial or Fibonacci.
+- Next step is pure mathematical thing - you need to transform 
+  equation to non-recurrent form which define some kind of 
+  geometric sequence 
+- In next step you need to find equation which describe 
+  sum of such sequences - which is equivalent to sum_sg(i, j).
+- When you find this, then you will be able to compute   
+ sum_sg(i, j) with one expression without any loop.
+  
+  
+
+  
+
+  and compute summ
+
 
 
 
