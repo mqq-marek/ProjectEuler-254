@@ -115,34 +115,6 @@ def g(i):
     return best_n
 
 
-def g_sequence(max_i):
-    """
-    Looks for g(i) in range 1..max_i
-    Define g(i) to be the smallest positive integer n such that sf(n) == i.
-    sf(342) = 5, also sf(25) = 5 and 25 is the smallest number giving sf(i) = 5, so g(5) = 25
-    As n start be huge numbers - million and more digits we store in cache sg(n) which is digits sum of n
-    Results are in a global cached dictionary
-    :param max_i: range for compute g(i) from 1 to max_i
-    :return: None
-    """
-
-    for i in range(1, max_i + 1):
-        if sg_cache.get(i):
-            continue
-        f_value = f_value_with_digit_sum(i)
-        best_n = reverse_f(int(f_value))
-        if DEBUG:
-            l_str = str(len(str(best_n.prefix)) + best_n.suffix_len)
-            if len(l_str) > 19:
-                l_str = '...'+l_str[-16:]
-            prefix = best_n.prefix + '+'
-            print(
-                f'len={l_str:21}, f(n) = {f_value:40}, '
-                f'g({i}) = {prefix}9*{best_n.suffix_len}')
-        sg_cache[i] = digits_sum(best_n.prefix) + 9 * best_n.suffix_len
-    return
-
-
 def sg(i):
     """
     Define  sg(i) as the sum of the digits of g(i).
@@ -160,20 +132,6 @@ def sg(i):
 def g_suffix_len(i):
     f_value = f_value_with_digit_sum(i)
     return reverse_f(int(f_value)).suffix_len
-
-
-def ratio_between_suffix_len(i, offset, m=None):
-    if offset % 162:
-        print(f"__name__: offset {offset} is not multiple of 162")
-    n0 = g_suffix_len(i)
-    n1 = g_suffix_len(i + offset)
-    m1 = divmod(n1, n0)
-    n2 = g_suffix_len(i + offset + offset)
-    m2 = divmod(n2, n1)
-    if m1 == m2:
-        return m1
-    else:
-        raise Exception(f"{__name__} fails with stable n ratio for i={i}, offset={offset}")
 
 
 def sum_sg_suffix_len(s, a, b, n, m):
@@ -194,35 +152,6 @@ def sum_sg_suffix_len(s, a, b, n, m):
     q2 = s * (anmod - 1) // (a - 1)
     rq = (q1 + q2) % m
     return rq
-
-
-def ratio_between_sum_sg_suffix_len(i, frame, m):
-    if frame % 162:
-        print(f"__name__: frame {frame} is not multiple of 162")
-    s1 = 0
-    for k in range(i, i + frame):
-        s1 += g_suffix_len(k)
-    s2 = 0
-    for k in range(i + frame, i + 2 * frame):
-        s2 += g_suffix_len(k)
-    r2to1 = divmod(s2, s1)
-    return s1, *r2to1
-    s3 = 0
-    for k in range(i + 2 * frame, i + 3 * frame):
-        s3 += g_suffix_len(k)
-    r3to2 = divmod(s3, s2)
-    s4 = 0
-    for k in range(i + 3 * frame, i + 4 * frame):
-        s4 += g_suffix_len(k)
-    r4to3 = divmod(s3, s2)
-    sa4 = sum_sg_suffix_len(s1, r2to1[0], r2to1[1], 4, m) %m
-    sb = (s1 + s2 + s3 + s4) % m
-    # print(f"{i} {r2to1} {s1}\n{sa4}\n{sb}")
-    # assert sa4 == sb
-    if r3to2 == r2to1 == r4to3:
-        return s1, *r2to1
-    else:
-        raise Exception(f"{__name__}: fails with stable sum_suffix_len for i={i}, frame={frame}")
 
 
 def sum_sg_range(n, frames, steps, m):
@@ -247,7 +176,6 @@ def sum_sg_range_test(n, frames, steps, m):
         t += g_.suffix_len * 9 + digits_sum(g_.prefix)
     if s % m != t % m:
         print(f"Fail with computing sum sg - is vs expected: \n{s}\n{t}")
-
 
 
 def sum_sg_mod_old(n, m):
@@ -284,14 +212,13 @@ def sum_sg_mod_old(n, m):
 
 
 def sum_sg_mod(n, m):
-    break_even = 1000
+    break_even = 500
     if n < break_even:
         return sum_sg_mod_old(n, m) % m
     else:
         frame = 162
         steps = (n + 1 - 162) // frame
         start = (n + 1 - steps * 162)
-        # print(f'Break_event for fast computing starts at  {start} with {frame} and {steps} steps')
         s = sum_sg_mod_old(start-1, m) % m
         s += sum_sg_range(start, frame, steps, m)
         return s % m
@@ -326,16 +253,6 @@ def hacker_main():
         print(r)
 
 
-
-def make_sum_param_table(start=162):
-    start = start // 162 * 162
-    sum_param_table = []
-    for i in range(162):
-        s, a, b = ratio_between_sum_sg_suffix_len(start+i, 162, 100000000)
-        sum_param_table.append(s)
-    print(f'sum_param_table = {sum_param_table}')
-
-
 def development_main(size=200, mod=None):
     pgm_start = time.perf_counter()
     init_prefixes()
@@ -355,13 +272,11 @@ def development_main(size=200, mod=None):
 
 
 if __name__ == "__main__":
-    # sum_sg_range_test(162*162, 162, 1, 10000)
     # DEBUG = True
     # hacker_main()
     # profile_main(50000000, 1000000000)
-    # development_main(50000000, 1073741823)
-    make_sum_param_table()
-    development_main(5000000000,1000000000000)
+    development_main(10**50, 2**30-1)
+    development_main(10**50, 10**18)
     exit()
 
 """
@@ -377,11 +292,12 @@ sum_sg(500000) has length 12 last digits are 412749963545 computed in 1.30 secon
 sum_sg(5000000) has length 12 last digits are 270356820724 computed in 6.22 seconds
 sum_sg(50000000) has length 12 last digits are 989282535332 computed in 68.57 seconds
 
-       50000000
 sum_sg(50000000) has length 12 last digits are 989282535332 computed in 1.81 seconds
 sum_sg(500000000) has length 12 last digits are 464253963566 computed in 1.61 seconds
 sum_sg(5000000000) has length 12 last digits are 785396820556 computed in 2.70 seconds
 
+sum_sg(100000000000000000000000000000000000000000000000000) has length 18 
+last digits are 380952380947918 computed in 0.00 seconds
 
 """
 

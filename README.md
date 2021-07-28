@@ -1070,9 +1070,7 @@ The approach which works here after detailed analysis of the data:
   
   
 
-  
-
-  and compute summ
+sum_sg(10000000000000000000000000000)  12 last digits are 238095233749 computed in 0.00 seconds
 
 
 
