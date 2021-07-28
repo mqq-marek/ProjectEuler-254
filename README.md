@@ -712,7 +712,10 @@ which is fast enough to pass the tests.
 
 On next day we will try join the best part of Day 2 and Day 3 solutions.
 
+
 ##Day 4
+
+
 The first time we receive algorithm which is slow 
 but can compute g(i) for i = 20,000 in lest than 3 minutes.
 
@@ -821,7 +824,9 @@ Execution time increased too fast for our task.
 That is because of processed values has huge amount of digits and cost of 
 operation growing faster than linear.
 
+
 ##Day 5
+
 
 Today we try to decrease time of computing sg(i).
 
@@ -1020,6 +1025,7 @@ It's great increase in speed comparing initial 10 ** 10 ** i.
 
 
 ##Day 6
+
 
 Base on description we will have the data size in range:
 
