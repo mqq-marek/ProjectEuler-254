@@ -305,12 +305,14 @@ def make_sgi_mod_table(base_value=162):
             dic[p + 2 * step] = (d, step)
 
     sgi_mod_table = []
+    sgi_mod_short = []
     for p, (d, s) in sorted(dic.items()):
         carry_on = 0
         prev = p-1 if p != min_pos else max_pos
         if d < dic[prev][0]:
             carry_on = 1
         sgi_mod_table.append((p, d, PREFIX[d], digits_sum(PREFIX[d]), carry_on, d*10 // F9))
+        sgi_mod_short.append((p, d, PREFIX[d], digits_sum(PREFIX[d]), carry_on, d*10 // F9))
         # print(f'{p}\t{d}\t{PREFIX[d]}\t{digits_sum(PREFIX[d])}\t{carry_on}\t{(d+1)*10 // F9}')
     return sgi_mod_table
 
@@ -332,12 +334,21 @@ def show_suffix_list():
 
 def print_const_tables():
     # print(f'g_table = {dic_as_list(g_cache)}')
-    # print(f'sg_table = {dic_as_list(sg_cache)}')
+    print(f'sg_table = {dic_as_list(sg_cache)}')
     #prefixes = [f(p) for p in dic_as_list(PREFIX)]
     #print(f'PREFIX = {prefixes}')
     hook_value = 162
     print(f'sgi_mod_table = {make_sgi_mod_table(hook_value)}')
 
+
+
+def make_sum_param_table(start=810):
+    start = start // 162 * 162
+    sum_param_table = []
+    for i in range(162):
+        s, a, b = ratio_between_sum_sg_suffix_len(start+i, 162, 100000000)
+        sum_param_table.append(s)
+    print(f'sum_param_table = {sum_param_table}')
 
 def hacker_main():
     init_prefixes()
@@ -372,18 +383,17 @@ def development_main(size=200, mod=None):
     else:
         total = sum_sg(size)
     pgm_stop = time.perf_counter()
-    print(f"suLato#$2021"
-          f"m_sg({size}) has length {len(str(total))} last digits are {total % 1000000000000000} "
+    print(f"sum_sg({size}) has length {len(str(total))} last digits are {total % 1000000000000000} "
           f"computed in {pgm_stop - pgm_start:.2f} seconds")
     assert_sg()
-    # print_const_tables()
+    print_const_tables()
 
 
 if __name__ == "__main__":
     # DEBUG = True
     # hacker_main()
     # profile_main(20000)
-    development_main(50000000, 1000000000000)
+    development_main(1000, 1000000000000)
     exit()
 
 """
