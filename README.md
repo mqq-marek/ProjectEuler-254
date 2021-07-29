@@ -352,8 +352,7 @@ Tests are in test_euler_day_02.py.
 
 ## Day 3
 
-In previous days we worked on  
-faster method for finding n such that g(i) is n. 
+In previous days we worked on faster method for finding n such that g(i) is n. 
 
 Now we are ready to notice why id does not help us find solution.
 
@@ -378,16 +377,16 @@ Simply for f(n) n has f(n)/9! digits 9 and prefix in length between 0 and 36
 such that digits factorial sum gives us f(n) % 9!. 
 
 
-For given i f(n) has i//9 digits. The 10**6 < 9! < 10**7. When we divide 
+For given i f(n) has i//9 digits. The 10\*\*6 < 9! < 10\*\*7. When we divide 
 f(n) / 9! we will have result which has maximum 7 digits less. 
-So that means that for given i n has 10**(i//9 - 7) digits 
+So that means that for given i n has 10\*\*(i//9 - 7) digits 
 and number having such number of digits has value 
-10 ** (10 ** (i//9-7)).
+10 \*\* (10 \*\* (i//9-7)).
 
-For example for i = 100, n has value around 10**10000 and has 10,000 digits plus prefix.
+For example for i = 100, n has value around 10\*\*10000 and has 10,000 digits plus prefix.
 For i = 300, n will have 8267195767195767195767195767 
 digits 9 plus prefix: 12233344445557777778 
-which is 10**28 9 digits comparing to 10**26 digits from our approximation.
+which is 10\*\*28 9 digits comparing to 10\*\*26 digits from our approximation.
 
 That is clear that method which is based on searching n incrementally
 will not work for i > 80.
@@ -751,8 +750,8 @@ Starting from i=63 finding n such that g(i) = n takes only one step.
 Reason behind this is that later on distance between two numbers 
 having the same amount of digits sum start to be bigger and bigger.
 For i=64 distance between to consecutive numbers with the same amount of digits is 
-When distance between numbers starts to be bigger than 10**7.
-When one f-value is greater than 10**37 from another 
+When distance between numbers starts to be bigger than 10\*\*7.
+When one f-value is greater than 10\*\*37 from another 
 one then difference between n is around 30 digits, 
 so we get stop condition after one step.
 
@@ -1093,7 +1092,7 @@ sum_sg(5000000) has length 12 last digits are 270356820724 computed in 6.22 seco
 sum_sg(50000000) has length 12 last digits are 989282535332 computed in 68.57 seconds
 
 Not time is linear - proportional to i.
-It's great increase in speed comparing initial 10 ** 10 ** i.
+It's great increase in speed comparing initial 10 \*\* 10 \*\* i.
 
 
 ## Day 6
@@ -1101,9 +1100,9 @@ It's great increase in speed comparing initial 10 ** 10 ** i.
 
 Base on description we will have the data size in range:
 
-1 <= i <= 10**18
-Empty loop in Python which has 10**9 repetition takes around 50 
-seconds, so 10**18 repetition loop takes more than 10,000 days.
+1 <= i <= 10\*\*18
+Empty loop in Python which has 10\*\*9 repetition takes around 50 
+seconds, so 10\*\*18 repetition loop takes more than 10,000 days.
 
 Until now, we work on finding the fastest way for guessing g(i).
 That does not work, so we need to work on finding directly of sum_sg 
