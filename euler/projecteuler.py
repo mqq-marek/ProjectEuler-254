@@ -9,8 +9,11 @@ import math
 from itertools import takewhile
 
 
-def multipler_in_range(divisiors, start, stop):
-    s = 0
+def multipler_in_range(stop):
+    divisiors = {3, 5}
+    d = (stop - 1) // 15
+    s = (60 * d) + (d - 1) * d // 2 * 105
+    start = (stop - 1) // 15 * 15 + 1
     for i in range(start, stop):
         for d in divisiors:
             if i % d == 0:
@@ -19,7 +22,8 @@ def multipler_in_range(divisiors, start, stop):
     return s
 
 
-print(multipler_in_range([3, 5], 3, 1000))
+
+print(multipler_in_range(1000))
 
 
 """
@@ -53,18 +57,22 @@ The prime factors of 13195 are 5, 7, 13 and 29.
 
 What is the largest prime factor of the number 600851475143 ?
 """
+import sys
+import math
 def largest_prime_factor(n):
-    def is_prime(num):
-        p = int(math.sqrt(num)) + 1
-        for j in range(2, min(p + 1, num - 1)):
+    def highest_divisior(num):
+        p = num // 2
+        for j in range(min(p + 1, num - 1), 1, -1):
             if num % j == 0:
-                return False
-        return True
+                return j
+        return num
 
-    s = int(math.sqrt(n)) + 1
-    for i in range(s+1, 1, -1):
+    hd = highest_divisior (n)
+    if hd == n:
+        return n
+    for i in range(hd, 1, -1):
         if n % i == 0:
-            if is_prime(i):
+            if highest_divisior(i) == i:
                 return i
-    return n
-print(largest_prime_factor(600851475143))
+for i in range(10,30)    :
+    print(i, largest_prime_factor(i))

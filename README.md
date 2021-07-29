@@ -1,11 +1,13 @@
-# hackerrank-euler
+# hackerrank-euler:  Sums of Digit Factorials - problem #254
+
 ## Day 0
 
-As the first step we build solution based on problem stated on
+
+At the first step we build solution based on problem definition from
 [HackerRank](https://www.hackerrank.com/contests/projecteuler/challenges/euler254/problem) 
 as Project Euler #254: Sums of Digit Factorials
 
-That is naive approach base implemented functions definition as is.
+That naive approach is based on functions definition.
 ```python
 import math
 
@@ -31,16 +33,15 @@ def sum_sg(n):
     return sum([sg(i) for i in range(1, n + 1)])
 ```
 
-Day 0 contains initial code extended with simple reporting and test cases.
+Day 0 contains only initial code extended with simple reporting and test cases.
 
 By using this approach you can compute function sg until value 45 in around 
 90 seconds on 
 Intel(R) Core(TM) i5-4310U CPU @ 2.00GHz   2.60 GHz.
 
 Python code is in file euler_00_naive.py. 
-Tests are in test_euler_00_naive.py. 
+Tests are in test_euler_00_naive.py.
 
-Initial analysis will be done next day.
 
 ## Day 1
 
