@@ -45,16 +45,17 @@ Tests are in test_euler_00_naive.py.
 
 ## Day 1
 
-We start with some basic refactoring.
+We start with some basic refactoring at the begining.
 
-Let's start with define factorial values for digits:
+Let's define factorials values for digits 1-9:
 ```python
 import math
 FACTORIALS = [math.factorial(i) for i in range(10)]
 ```
 
-Next let's improve number conversion into list of digits with generator.
-This generator yields digits in reverse order but digits sum is not depend on the digits order.
+Next we improve number conversion into list of digits using generator.
+This generator yields digits in reverse order 
+but digits sum is not depend on the digits order
 
 ```python
 def digits_gen(n):
@@ -75,14 +76,19 @@ def sf(n):
 ```
 
 
-Now let's look at function sg. Our final function sum_sg need 
-to compute sg & g for values from 1 to n and compute sg sum as a result.
-That's mean that it is good to cache g values in case of next call.
+Now let's look at function sg and sum_sg. 
+Our final function sum_sg need 
+to compute sg & g for values from 1 to n 
+and compute sg sum as a result.
+
+That's mean that having g values cached in case of next call will help
+
 Other observation is that for every g(i) we start loop with n = 1. 
 instead of find a way to resume g computation from previous n value.
 
 So let's start the first with update sf function to store in cache 
 under integer key i such the lowest integer n for which sf(n) == i.
+In other way key, value pair means that g(key) = value.
 
 ```python
 sf_cache = {}
@@ -120,34 +126,38 @@ def g_sequence(max_i):
     return sf_cache
 ```
 
-
-The last change we made before detailed task analysis is the way how 
-we will represent number n on which we will work.
+There are many operations here on number digits instead of number value.
+This leads us to change the way how numbers can be represented.
 
 Let's define class Digits which will represent the numbers.
-Class digits will represent number as a list of integers 0-9 
-representing digits starting from least significant (reversed order).
-We define methods __str__, digits_gen and next.
+Internally we will represent number as a list of digits (integers 0-9). 
+List will keep digits in reverse order starting from least significant.
+
+We define methods __str__ and value for converting number to string 
+and int.
 Method next will find the next number for testing f values. 
 
-We make them slightly better than just take the next integer.
-- When we compute f(n) = x we are interested only in the minimal n giving x 
-  as later we look only for minimal n such that sf(n) = s(f(n)) = i. 
-  So if we have numbers n0, n1, n2, ... having the same f_value 
+Now is a time for first analysis. We will try to find better way to 
+guess proper n such that n = g(i) than simply increase n.
+- If we have numbers n0, n1, n2, ... having the same f_value 
   we need to find the smallest one and skip all others. 
   E.g., 2 = f(2) = f(11) = f(1223) = f(2333). So, we need only 2.
+- If two numbers have the same f value 
+  the number with fewer digits is better
 - Minimal n giving f(n)=i has digits in not decreasing order. 
-  If some digits are decreasing like 32 then f(23)=f(32) and 23 < 32  
-- If we have sequence od digits d[0],...,d[i], d[i+1], ....d[k] then
-f(d[0]....d[k]) = f(d[0])...f(d[i]) + f(d[i+1]...d[k]) based on f definition
+  If some digits are decreasing order like 32 then f(23)=f(32) and 23 < 32  
+- If we have sequence of digits d[0],...,d[i], d[i+1], ....d[k] then
+f(d[0]....d[k]) = f(d[0])+...+f(d[i]) + f(d[i+1]...d[k]) based on f definition
 - If we have minimal n where s(f(n)) = i, then n does not contain 0. 
   We can always substitute 10 by 2 because f(10)=f(2) and 2 < 10. We can
-  substitute 20 by 12 because f(20)=f(12) and 12 < 20...
+  substitute 20 by 12 because f(20)=f(12) and 12 < 20 and so on ...
 
 
-Based on this analysis we build next method. In it instead of increasing 
-n by 1 when search for g(i) = n, we will take next n in a way that next 
-number will be selected in a way that its digits are in increasing order. E.g. 
+Based on this analysis we build the improved next method. 
+Instead of increasing n by 1 and testing sf(n) against i, 
+we will take next n which fulfill conditions which we find above.
+The numbers selected by the next method will have 
+its digits in increasing order. E.g. 
 after 239999 next is 244444 not 24000.
 
 ```python
@@ -198,14 +208,16 @@ For g(45), n is 12378889
 For g(55), n is 1333666799999999999
 For g(60), n is 1233456679999999999999999999999
 
-You can notice the n size increases very fast, so the methods 
-which is based on finding incrementally such n that sf(n) = i
+You can notice now that, the n size increases very fast.
+That is a reason why finding incrementally such n that sf(n) = i
 for i > 70 will not work.
 
 Python code is in file euler_day_01.py. 
 Tests are in test_euler_day_01.py. 
 
 ## Day 2
+
+
 We will look more detailed on the way how different n gives the same f(n).
 
 Yesterday we noticed the prospect n numbers has digits ordered 
