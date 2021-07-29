@@ -225,22 +225,22 @@ Tests are in test_euler_day_01.py.
 
 We will look more detailed on the way how different n gives the same f(n).
 
-Yesterday we noticed the prospect n numbers has digits ordered 
-from smallest to highest.
-We also notice yesterday some reduction property: 
-- if n has two 11 digits it can be 
-replaced by 2 which is makes smaller number 
-because its length is shorter by one digit.
-  
-So we know that numbers which are result of g(i) have maximum one digit 1.
+Yesterday we noticed that, the prospect number n has digits ordered 
+from smallest to highest. 
 
-If we apply the same rules to others digit we can easily find that:
+We fonded also some reduction property - n does not have digit 0 
+and n has only one digit 1 (11 digits can be 
+replaced by 2 which makes smaller number because number is horter by one digit).
+
+
+If we apply the same redustion rules to others digit we can easily 
+find that:
 - f(222) = f(3) as 2!+2!+2! = 3!
 - f(3333) = f(4)
 - ...
 - f(888888888) = f(9) as 9 * 8! = 9!
 
-As a result that number candidates for being n such that g(i)=n have
+As a result that number n candidates such that g(i)=n have
 the following pattern:
 
 ^1{0,1}2{0,2}3{0,3}4{0,4}5{0,5}6{0,6}7{0,7}8{0,8}9*$
@@ -248,16 +248,21 @@ the following pattern:
 - digits are in ascending order
 - there is max 1 time 1, 2 times 2, ..., 8 times 8 and any number of 9 digits
 
-We can look as prospect n as pair prefix and suffix. 
-- Prefix contains digits from 1 to .8 and has length in range 0..36 digits 
-with the longest prefix: 12233344445555566666677777778888888
+Based on thi we can look at n as number composed of two parts: 
+prefix and suffix. 
+- Prefix contains digits from 1 to 8 and has length in range 0 to 36
+  digits. The longest prefix 12233344445555566666677777778888888 has
+  f value equals 9!-1
 - Suffix 0 or more digits 9. Unlimited length.
 
 
-We modify method which gives us next n in a way that after every increment 
-we will enforce that next number will be modified in a way that enforce rules states above.
+We modify method next in a way that after every increment 
+we will have number which forms valid prefix and suffix 
+composed of 0 or more digits 9.
 
-Update function will verify that digit d will not occur more that d times except 9.
+
+Update function below enforces rule that digit d will occur 
+maximum d times except 9.
 
 ```python
 class Digits:
@@ -336,7 +341,7 @@ class Digits:
             yield d
 
 ```
-Only 4 times faster than day before.
+New algorithm is only 4 times faster than day before.
 We need huge increase.
 
 Let's try harder next day.
