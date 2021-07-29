@@ -204,9 +204,14 @@ class Digits:
 Now speed of the algorithm is around 600 times faster, 
 but it allows as to increase computing sum_sg from 45 to 55 
 in time of one minute.
+
 For g(45), n is 12378889
+
 For g(55), n is 1333666799999999999
+
 For g(60), n is 1233456679999999999999999999999
+
+
 
 You can notice now that, the n size increases very fast.
 That is a reason why finding incrementally such n that sf(n) = i
