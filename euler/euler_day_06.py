@@ -137,7 +137,7 @@ def g_suffix_len(i):
 def sum_sg_suffix_len(s, a, b, n, m):
     # print(f'{__name__}: n={n}, m={m}, \ns={s}, \na={a}, \nb={b}')
     am1sqr = (a - 1) * (a - 1)
-    anmod = pow(a, n, m)
+    anmod = pow(a, n)
     q1 = b * (anmod - a * n + n - 1) // am1sqr
     q2 = s * (anmod - 1) // (a - 1)
     rq = (q1 + q2) % m
