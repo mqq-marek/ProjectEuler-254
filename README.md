@@ -905,14 +905,16 @@ such operation growing faster than linear.
 Today we try to decrease time of computing sg(i).
 
 Computing sg(i) looks in the following way:
-- build the first f_value which has i digits (i: 10-> 19, i: 71->89999999)
+- build the first f_value which has i digits 
+  (i: 10-> 19, i: 71->89999999)
 - find n as: :
   - suffix which contains (f_value // 9!)  digits '9'
   - prefix which sum of factorial digits is: f_value % 9!
 - build sg as sum of digits n: 9 * (f_value // 9!) + digits_sum(prefix)
 
-Number of digits of f_value increased fas. For i = 500 F_value has 56 digits 
-so cost od operations on such numbers start to be high.
+Number of digits of f_value increased fast. 
+For i = 500 F_value has 56 digits, n value has 10\*\*49 digits,
+so cost of operations on such numbers start to be very high.
 
 Let's look at the F_values base on increasing order of i:
 76: 499999999
@@ -925,16 +927,21 @@ Let's look at the F_values base on increasing order of i:
 83:2999999999, increase:1000000000
 
 So we can compute sg(i+1) as sum of:
-- digits_sum(prefix for i+1) - we can eliminate computing f_value % 9! and 
+- digits_sum(prefix for i+1) - 
+  we can eliminate computing f_value % 9! and 
   make 162 elements prefix table as prefixes goes in cycle of i % 162
 - 9*numbers of digits 9 in sg(i)
 - additional amount of 9 digits based on increase value (increase // 9!) - 
   we have divide operation here, but we can do it once every 9 
   steps as 9 increases 
   are the same next we have next 9 increases 10 times higher
-- carry which is 0 or 1. Integer divide and modulo gives 1 increase 
-  when divide when remainder is smaller than in previous step. 
-  Again it is base 162 elements cyle, when dividing f_value by 9!, so we keep this value in the same table.
+- carry which is 0 or 1. 
+  Integer divide by the same offset value gives sometimes 1
+  increase as you need to account also remainder from previous step divide..
+  Simply when divide remainder in current step is smaller 
+  than remainder in previous step we have additional 1 in divide result.. 
+  Again it is base 162 elements cycle, 
+  when dividing f_value by 9!, so we keep this value in the same table.
 
 ``` python
 def sum_sg_mod(n, m):
@@ -1016,7 +1023,8 @@ sum_sg(50000) has length 12 last digits are 984132135059 computed in 0.81 second
 sum_sg(500000) has length 12 last digits are 412749963545 computed in 43.34 seconds
 
 Expected result need to have value mod m, 
-then  we introduce modulo arithmetic which prevent us to use huge numbers.
+then  we introduce modulo arithmetic which prevent 
+us to use to have huge numbers in our computations.
 
 ```python
 def sum_sg_mod(n, m):
@@ -1094,7 +1102,7 @@ sum_sg(500000) has length 12 last digits are 412749963545 computed in 1.30 secon
 sum_sg(5000000) has length 12 last digits are 270356820724 computed in 6.22 seconds
 sum_sg(50000000) has length 12 last digits are 989282535332 computed in 68.57 seconds
 
-Not time is linear - proportional to i.
+Now time is linear - proportional to i.
 It's great increase in speed comparing initial 10 \*\* 10 \*\* i.
 
 
