@@ -1017,10 +1017,10 @@ def sum_sg_mod(n, m):
 Now algorithm is fast but later on when numbers starts 
 to have huge amount of digits is slow.
 
-sum_sg(500) has length 12 last digits are 412698459839 computed in 0.00 seconds
-sum_sg(5000) has length 12 last digits are 269841780640 computed in 0.02 seconds
-sum_sg(50000) has length 12 last digits are 984132135059 computed in 0.81 seconds
-sum_sg(500000) has length 12 last digits are 412749963545 computed in 43.34 seconds
+- sum_sg(500) has length 12 last digits are 412698459839 computed in 0.00 seconds
+- sum_sg(5000) has length 12 last digits are 269841780640 computed in 0.02 seconds
+- sum_sg(50000) has length 12 last digits are 984132135059 computed in 0.81 seconds
+- sum_sg(500000) has length 12 last digits are 412749963545 computed in 43.34 seconds
 
 Expected result need to have value mod m, 
 then  we introduce modulo arithmetic which prevent 
@@ -1098,9 +1098,9 @@ def sum_sg_mod(n, m):
 ```
 
 After introduce mod m arithmetic:
-sum_sg(500000) has length 12 last digits are 412749963545 computed in 1.30 seconds
-sum_sg(5000000) has length 12 last digits are 270356820724 computed in 6.22 seconds
-sum_sg(50000000) has length 12 last digits are 989282535332 computed in 68.57 seconds
+- sum_sg(500000) has length 12 last digits are 412749963545 computed in 1.30 seconds
+- sum_sg(5000000) has length 12 last digits are 270356820724 computed in 6.22 seconds
+- sum_sg(50000000) has length 12 last digits are 989282535332 computed in 68.57 seconds
 
 Now time is linear - proportional to i.
 It's great increase in speed comparing initial 10 \*\* 10 \*\* i.
