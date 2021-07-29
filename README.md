@@ -778,11 +778,14 @@ Representation defined in our problem composed of prefix suffix will be
 2750 times longer than before multiply.
 
 Multiple two n digits numbers in decimal/binary representation 
-gives the result with  maximum 2*n digits.
+gives the result with  maximum 2\*n digits.
 For prefix/suffix representation the result will have 
-n*n digits in the result.
+n\*n digits in the result.
 
-
+Prefix suffix representation is like representation with radix equals 1.
+Every digit 9 is responsible for value 9!. So representation length is 
+ proportional to number value while in positional representation 
+number length is proportional math.log(number, radix).
 
 ## Day 4
 
@@ -791,14 +794,17 @@ The first time we receive algorithm which is slow
 but can compute g(i) for i = 20,000 in lest than 3 minutes.
 
 The last solution is very slow for small i. 
-We can also notice that f value pattern is random especially at the beginning 
-and above i=63 is very regular.
+We can also notice that f value pattern is random 
+especially at the beginning 
+while above i=63 is very regular.
 
 
 The reason behind is the prefix/suffix interaction. For small i, 
-the prefix part summed up with suffix(which is missing or very small) 
-introduce huge noise as both parts are very irregular and comparable - 
-increase and decrease very rapidly.
+the length of prefix part summed up with length of suffix part
+introduce huge noise as lengths of parts are comparable 
+while prefix value comparing to its length is very irregular.
+
+
 Later on impact of 
 prefix part is negligible as 
 distance between two n's having the same digit sum or greater digits sum 
@@ -808,15 +814,16 @@ from i=63 g(i) function behavior is very regular.
 For speed up our algorithm we initialize the first 200 values of g(i) 
 at the beginning and start to compute g(i) from bigger values.
 
-There is need for only 117 prefixes for building n when i>63, 
-so we  initialized them as PREFIX table.
+When we will look at prefixes 
+we can notice that only 117 out of 9! prefixes are used 
+for composing n such that g(i) = n i>63.
 
 We can build n such that g(i) = n in one step, so 
 we remove FDigits class and stay with function which gives 
 us f_value and reverse function for getting n.
 
 Function g_sequence is very simple now - no need for scan and find best_n. 
-We always get it in one ste.
+We always get it in one step.
 
 
 ```python
@@ -869,6 +876,7 @@ sum_sg(50000) has length 5552 last digits are 126984132135059 computed in 4.09 s
 sum_sg(100000) has length 11108 last digits are 269841280147918 computed in 27.90 seconds
 
 We can see now that computing sum up to 50,000 is 4 sec, up to 100,000 is 27 sec.
+That means that we have still faster than linear increase in computing time.
 
 Let's verify this using profiler.
 
@@ -886,14 +894,9 @@ def profile_main(size=200):
 ```
 
 
-
-
-sum_sg(50000) has length 5552 last digits are 126984132135059 computed in 4.09 seconds
-sum_sg(100000) has length 11108 last digits are 269841280147918 computed in 27.90 seconds
-Execution time increased too fast for our task.
-
-That is because of processed values has huge amount of digits and cost of 
-operation growing faster than linear.
+Execution time increases because of processed values 
+have huge amount of digits and cost of 
+such operation growing faster than linear.
 
 
 ## Day 5
