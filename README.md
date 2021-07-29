@@ -352,83 +352,103 @@ Tests are in test_euler_day_02.py.
 
 ## Day 3
 
-In previous days we worked on a way how to improve speed on 
-finding n such that g(i) is n. 
+In previous days we worked on  
+faster method for finding n such that g(i) is n. 
 
-Now we are ready to discover that this does not help us find solution.
+Now we are ready to notice why id does not help us find solution.
 
 
-g(i) is defined as smallest number n such sf(n) (sum of digits f(n)) is equal n.
-For given i the smallest number having digits sum of i is number 
-composed of digits 9 and up to one digit at the beginning which sum up to i,
+g(i) is defined as smallest number n such sf(n) 
+(sum of digits f(n)) is equal n.
 
-Simply we have number with digit i % 9 at the beginning and i//9 digits n.
-So f(n) has i//9 digits. 
+For given i f value having digits sum equals  i is number 
+composed of digits 9 and up to one digit at the beginning which sum up to i.
+For example for i = 50 f(n) is 499999, for i = 100, 
+f(n) is 199999999999.
 
-When we have k digits f(n) this number is sum of factorial of digits n. 
-The biggest factorial is for 9 digit which is less than 10**7. 
-That means that for k digits f(n) the number n will have minimum 10**(k-7) digits n.
+Simply we have number with digit i % 9 at the beginning 
+and i // 9 digits n.
+So f(n) has ceil(i//9) digits. 
 
-So that means that for given i, g(i) will have number n 
-having minimum 10**(i//9-7) digits so value of n is 10 ** (10 ** (i//9-7)).
+Having f(n) we can find n. 
+We know that having n f(n) is build as a sum of number n digits factorial.
+Part with prefix is responsible for value from 0 to 9!-1 
+and every digit 9 is responsible for value 9! in f(n). 
+Simply for f(n) n has f(n)/9! digits 9 and prefix in length between 0 and 36 
+such that digits factorial sum gives us f(n) % 9!. 
 
+
+For given i f(n) has i//9 digits. The 10**6 < 9! < 10**7. When we divide 
+f(n) / 9! we will have result which has maximum 7 digits less. 
+So that means that for given i n has 10**(i//9 - 7) digits 
+and number having such number of digits has value 
+10 ** (10 ** (i//9-7)).
+
+For example for i = 100, n has value around 10**10000 and has 10,000 digits plus prefix.
 For i = 300, n will have 8267195767195767195767195767 
-digits 9 plus prefix: 12233344445557777778.
-which is 10**28 9 digits comparing to 10**26 from our approximation.
+digits 9 plus prefix: 12233344445557777778 
+which is 10**28 9 digits comparing to 10**26 digits from our approximation.
 
-That is clear why method which is based on searching n 
-will not work for bigger i.
+That is clear that method which is based on searching n incrementally
+will not work for i > 80.
 
-We need to find other, cheap method for finding g(i) which is not based on 
-incremental n increase and test that sf(n)=i where base on 
-definition sf(n) is f(n) sum of digits .
+We need to find cheaper method for finding g(i). 
 
 So instead of generate successive n, lets 
-try for given i generate successive f_values where f_value sum of digits is i.
-We still need n, as sg(i) is sum digits of n.
+try for given i generate successive f_values 
+with sum of digits equals i.
 
-We need to built reverse f function which from f_value gives us n.
+Next we need to built reverse f function which from f_value gives us n.
 We know that n  contains 
-some digits from PREFIX: 122333444455555666666777777788888888 and
-SUFFIX: any number of digits 9.
-If n is concatenations of digits in PREFIX and SUFFIX then 
+some digits from:
+- PREFIX: 122333444455555666666777777788888888 and
+- SUFFIX: any number of digits 9.
+- If n is concatenations of digits in PREFIX and SUFFIX then 
 f(n) = f(PREFIX) + f(SUFFIX).
-We can find (eg. generating all PREFIXES) that we have 9!-1 prefixes 
-and for ay number k from range 1..9!-1 exist prefix such that f(prefix) = k.
+- For given f_value we can find n in 
+the following way: 
+  - SUFFIX length is f_value // 9! digits n. 
+  - PREFIX is a number which sum  of digits factorial equals 
+ f_value x % 9!
+  - PREFIX can be can find with pre-build dictionary which 
+    for given f(PREFIX) gives us PREFIX. You can verify that 
+    we have 9!-1 prefixes and for any number k from range 1..9!-1 
+    exist exactly one prefix 
+    (in form: ^1{0,1}2{0,2}3{0,3}4{0,4}5{0,5}6{0,6}7{0,7}8{0,8}9*$)
+    such that f(prefix) = k.
 
-So for given f_value we can find n such that f(n) = f_value in 
-the following way: SUFFIX length is x // 9!. For prefix part we 
-need to find prefix such that f(prefix) = x % 9!. 
-The easiest is to make table or dictionary which maps from f(prefix)
-to prefix (9!-1 elements).
 
-Now our new approach for finding g(i) for given i looks like this:
+Now our new approach for finding g(i) for given i looks like:
 - Let's get the lowest number f_value having sum of digits = i
 - Using reverse f function find n such that f(n) = f_value, and sf(n) = i
 
-Unfortunately we need sometimes scan more than one f_value with sum i 
+Unfortunately we need scan more than one f_value with sum i 
 as we need find smallest n such that sf(n)=i - starting from the smallest 
-f_value does not give us smallest n .
+f_value does not guarantee us smallest n.
 
-For example for i =21 smallest f_value 
+For example for i =21:
+- the smallest number 
 which have sum 21 is 399 = f(12334555)=399. 
-Next number with sum 21 is 489 = f(1235555).
-When we go further with scanning  numbers having sum 21
-we can find for example 768 = f(446), 362910 = f(349). 
-The last one gives us n which is g(21) = 349.
+- next number with sum 21 is 489 = f(1235555).
+- ...
+- next number having sum 21 is 768 = f(446), 
+- ...  
+-  362910 = f(349). 
+
+The last one gives us n which is g(21) = 349. 
+All numbers with sum of digits equal 21 gives us greater n than 349.
 
 We need to limit in some way this scan. 
 
 The easiest way is to take the length of the first prefix here 
 is 8=length(12334555), which gives us limit for f value as 8*9!.
-Based on the way how we build n from v_value 
+
+Based on the way how number n looks like  
 we know that for f_value > k*9! we will have k digits with non-empty prefix or 
 more than k digits 9.
 
-So let's start and define all prefixes in dictionary which allows us 
-map f(prefix) to prefix. For better 
-speed we can use list instead of dictionary.
-
+Let's start and define all prefixes in dictionary which allows us 
+map f(prefix) to prefix. 
 
 ```python
 PREFIX = {}
@@ -452,8 +472,8 @@ def init_prefixes():
     PREFIX[0] = ''
 ```
 
-For fining f values with given sum  we define FDigits class.
-assume the following approach:
+For fining f values with given sum  we define FDigits class with 
+the following approach:
 - class constructor need to have parameter - number of digits
 - class works as iterator so class object will generate  
   sequence of numbers with given sum of digits in increasing order 
@@ -567,8 +587,10 @@ class FDigits:
 ```
 
 For computing number n from f(n) we need to define reverse_f function.
-We know that n is composed of prefix and suffix with contains only digits 9, 
-so we define N_Number tuple, function reverse_f and function which takes 
+We know that n is composed of prefix and suffix which 
+contains only digits 9, 
+so we define N_Number tuple as prefix and suffix_len and 
+function smaller_n, which takes 
 two N_Number's and returns smaller one.
 
 ```python
@@ -726,6 +748,17 @@ cost:            1, len=230                  , f(n) =                           
 As you can see initial steps until i = 62 are very costly and slow.
 Starting from i=63 finding n such that g(i) = n takes only one step.
 
+Reason behind this is that later on distance between two numbers 
+having the same amount of digits sum start to be bigger and bigger.
+For i=64 distance between to consecutive numbers with the same amount of digits is 
+When distance between numbers starts to be bigger than 10**7.
+When one f-value is greater than 10**37 from another 
+one then difference between n is around 30 digits, 
+so we get stop condition after one step.
+
+
+
+
 sum_sg(20000) is computed in 144.58 seconds
 
 
@@ -735,6 +768,21 @@ But on HackerRank problem is more difficult you - you must build solution
 which is fast enough to pass the tests.
 
 On next day we will try join the best part of Day 2 and Day 3 solutions.
+
+
+### Numbers representation
+Two most frequent number representation are base on radix 10 and 2.
+When you have number 1,000,000,000 times bigger than 
+its representation in decimal format is plus 9 digits longer, binary representation
+is plus 30 digits longer.
+Representation defined in our problem composed of prefix suffix will be
+2750 times longer than before multiply.
+
+Multiple two n digits numbers in decimal/binary representation 
+gives the result with  maximum 2*n digits.
+For prefix/suffix representation the result will have 
+n*n digits in the result.
+
 
 
 ## Day 4
