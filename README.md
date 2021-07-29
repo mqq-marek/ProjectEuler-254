@@ -1112,6 +1112,8 @@ It's great increase in speed comparing initial 10 \*\* 10 \*\* i.
 Base on description we will have the data size in range:
 
 1 <= i <= 10\*\*18
+
+
 Empty loop in Python which has 10\*\*9 repetition takes around 50 
 seconds, so 10\*\*18 repetition loop takes more than 10,000 days.
 
@@ -1122,7 +1124,7 @@ and sum them.
 
 To solve this we need to use mathematical approach.
 
-Based ides is to find the sum of the sum_sg_range(i, j) in one step.
+Based idea is to find the sum of the sum_sg_range(i, j) in one step.
 
 sg(i) is sum digits of lowest n such that g(i) = n. 
 N is composed of prefix (build from digits form 
@@ -1136,15 +1138,15 @@ The easiest way which very frequently works is to find formula
 for next sum based on previous one,
 
 The approach which works here after detailed analysis of the data:
-- Take some starting point and frame which are based for our approach 
-- for i in range(start, start + frame) sum all digits 9 fo g(i) in 
+- Take some starting point and frame  
+- for i in range(start, start + frame) sum all digits 9 for g(i) in 
   this range
 - next repeat the same for few next steps 
   range(start+frame, start+2*frame) and so on
 - try to find something which allows you 
   to describe sum of next frame as combination of previous frame sum.
-  That is possible that you need to work with different frame size and 
-  start point.
+  That is possible that you need to work with different frame sizes and 
+  different start points.
 - You need to find some rules which will define sum_sg(i+1) as 
   some combinations of earlier step. Something similar to 
   recurrent definition of factorial or Fibonacci.
