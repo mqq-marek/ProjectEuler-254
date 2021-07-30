@@ -1165,7 +1165,7 @@ sum_sg(10000000000000000000000000000)  12 last digits are 238095233749 computed 
 
 Finals submission as marek38 - rank 12
 
-Success rate for this problem 0.23% until now.
+Success rate for this problem is 0.23% until now.
 
 
 
