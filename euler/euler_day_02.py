@@ -31,7 +31,7 @@ def digits_sum(n):
     if isinstance(n, int):
         return sum([d for d in digits_gen(n)])
     elif isinstance(n, str):
-        return sum([ord(d) - ord('0') for d in n])
+        return sum([int(ch) for ch in n])
     else:
         return sum([d for d in n.digits_gen()])
 
@@ -47,13 +47,13 @@ class Digits:
         if isinstance(number, int):
             self.num = list(digits_gen(number))
         elif isinstance(number, str):
-            self.num = [ord(ch) - ord('0') for ch in number[::-1]]
+            self.num = [int(ch) for ch in number[::-1]]
         else:
             self.num = number.num
 
     def __str__(self):
         """ Return number value as str """
-        return ''.join([chr(d+ord('0')) for d in self.num[::-1]])
+        return ''.join([str(d) for d in self.num[::-1]])
 
     @property
     def value(self):

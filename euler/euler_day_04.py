@@ -45,7 +45,7 @@ def digits_sum(n):
     if isinstance(n, int):
         return sum([d for d in digits_gen(n)])
     elif isinstance(n, str):
-        return sum([ord(d) - ord('0') for d in n])
+        return sum([int(ch) for ch in n])
     else:
         return sum([d for d in n.digits_gen()])
 
@@ -66,7 +66,7 @@ def f_value_with_digit_sum(digits_sum):
     if d == 0:
         return '9' * n9
     else:
-        return chr(d+ord('0')) + '9' * n9
+        return str(d) + '9' * n9
 
 
 def f(n):

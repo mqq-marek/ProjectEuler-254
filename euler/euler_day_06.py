@@ -49,7 +49,7 @@ def digits_sum(n):
     if isinstance(n, int):
         return sum([d for d in digits_gen(n)])
     elif isinstance(n, str):
-        return sum([ord(d) - ord('0') for d in n])
+        return sum([int(ch) for ch in n])
     else:
         return sum([d for d in n.digits_gen()])
 
@@ -60,7 +60,7 @@ def f_value_with_digit_sum(n):
     if d == 0:
         return '9' * n9
     else:
-        return chr(d+ord('0')) + '9' * n9
+        return str(d) + '9' * n9
 
 
 def reverse_f(f_value):
@@ -137,9 +137,9 @@ def g_suffix_len(i):
 def sum_sg_suffix_len(s, a, b, n, m):
     # print(f'{__name__}: n={n}, m={m}, \ns={s}, \na={a}, \nb={b}')
     am1sqr = (a - 1) * (a - 1)
-    anmod = pow(a, n)
-    q1 = b * (anmod - a * n + n - 1) // am1sqr
-    q2 = s * (anmod - 1) // (a - 1)
+    an = pow(a, n)
+    q1 = b * (an - a * n + n - 1) // am1sqr
+    q2 = s * (an - 1) // (a - 1)
     rq = (q1 + q2) % m
     return rq
 
@@ -150,7 +150,6 @@ def sum_sg_range(n, frames, steps, m):
     if frames % 162:
         print("sum_sg_range called with frames not being multiple of 162")
     '''
-    # s, a, b = ratio_between_sum_sg_suffix_len(n, frames, m)
     s, a, b = sum_param_table[n % 162], SUM_A, SUM_B
     suffix_part = sum_sg_suffix_len(s, a, b, steps, m) * 9
     prefix_part = steps * f_count * PREFIXES_SUM % m
@@ -265,8 +264,8 @@ if __name__ == "__main__":
     # DEBUG = True
     # hacker_main()
     # profile_main(50000000, 1000000000)
-    development_main(10**50, 2**30-1)
-    development_main(10**50, 10**18)
+    development_main(5*10**7, 2**30-1)
+    development_main(5*10**7, 10**18)
     exit()
 
 """

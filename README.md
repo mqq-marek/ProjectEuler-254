@@ -166,7 +166,7 @@ class Digits:
         self.num = list(digits_gen(number))
 
     def __str__(self):
-        return ''.join([chr(d+ord('0')) for d in self.num[::-1]])
+        return ''.join([str(d) for d in self.num[::-1]])
 
     @property
     def value(self):
@@ -270,13 +270,13 @@ class Digits:
         if isinstance(number, int):
             self.num = list(digits_gen(number))
         elif isinstance(number, str):
-            self.num = [ord(ch) - ord('0') for ch in number[::-1]]
+            self.num = [int(ch) for ch in number[::-1]]
         else:
             self.num = number.num
 
     def __str__(self):
         """ Return number value as str """
-        return ''.join([chr(d+ord('0')) for d in self.num[::-1]])
+        return ''.join([str(d) for d in self.num[::-1]])
 
     @property
     def value(self):
@@ -510,7 +510,7 @@ class FDigits:
 
     def __str__(self):
         """ Return number value as str. """
-        return ''.join([chr(d + ord('0')) for d in self.num[::-1]])
+        return ''.join([str(d) for d in self.num[::-1]])
 
     def __iter__(self):
         """ Returns itself as an iterator object. """
@@ -840,7 +840,7 @@ def build_f_value_with(digits_sum):
     if d == 0:
         return '9' * n9
     else:
-        return chr(d+ord('0')) + '9' * n9
+        return str(d) + '9' * n9
 
 
 def g_sequence(max_i):
@@ -1158,6 +1158,9 @@ The approach which works here after detailed analysis of the data:
 - When you find this, then you will be able to compute   
  sum_sg(i, j) with one expression without any loop.
   
+
+Last version published contains one-step expression for computing 
+sum_sg but is not fully optimized.
   
 
 sum_sg(10000000000000000000000000000)  12 last digits are 238095233749 computed in 0.00 seconds

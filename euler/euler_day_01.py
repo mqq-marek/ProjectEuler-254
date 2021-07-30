@@ -30,7 +30,7 @@ def digits_sum(n):
     if isinstance(n, int):
         return sum([d for d in digits_gen(n)])
     elif isinstance(n, str):
-        return sum([ord(d) - ord('0') for d in n])
+        return sum([int(ch) for ch in n])
     else:
         return sum([d for d in n.digits_gen()])
 
@@ -40,13 +40,13 @@ class Digits:
         if isinstance(number, int):
             self.num = list(digits_gen(number))
         elif isinstance(number, str):
-            self.num = [ord(ch) - ord('0') for ch in number[::-1]]
+            self.num = [int(ch) for ch in number[::-1]]
         else:
             self.num = number.num
 
     def __str__(self):
         """ Return number value as str """
-        return ''.join([chr(d+ord('0')) for d in self.num[::-1]])
+        return ''.join([str(d) for d in self.num[::-1]])
 
     @property
     def value(self):
@@ -150,13 +150,13 @@ def g_sequence(max_i):
             stop_time = time.perf_counter()
             if DEBUG:
                 print(
-                    f"For n = {str(n):10} sf(n) = {i:2}. sg({i:2}) = {digits_sum(n):2}. "
+                    f"For n = {str(n):40} sf(n) = {i:2}. sg({i:2}) = {digits_sum(n):2}. "
                     f"Time: {stop_time-start_time:8.4f} seconds"
                 )
         else:
             if DEBUG:
                 print(
-                    f"For n = {sf_cache[i]:10} sf(n) = {i:2}. "
+                    f"For n = {sf_cache[i]:40} sf(n) = {i:2}. "
                     f"sg({i:2}) = {digits_sum(sf_cache[i]):2}. "
                     f"Time: Computed in earlier step"
                 )
