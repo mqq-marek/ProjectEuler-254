@@ -1163,6 +1163,14 @@ The approach which works here after detailed analysis of the data:
 sum_sg(10000000000000000000000000000)  12 last digits are 238095233749 computed in 0.00 seconds
 
 
+Finals submission as marek38 - rank 12
+
+Success rate for this problem 0.23% until now.
+
+
+
+
+
 
 
 
