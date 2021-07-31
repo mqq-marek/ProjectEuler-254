@@ -52,27 +52,30 @@ def digits_gen(n):
 
 
 def digits_sum(n):
-    if isinstance(n, int):
-        return sum([d for d in digits_gen(n)])
-    elif isinstance(n, str):
-        return sum([int(ch) for ch in n])
-    else:
-        return sum([d for d in n.digits_gen()])
+    """
+    Returns sum of digits of number n.
+    For example:
+        digits_sum(245) = 2 + 4 + 5
+    :param n: n
+    :return: sum of digits
+    """
+    return sum(int(ch) for ch in str(n))
 
-
-def get_suffix_value(number):
-    """ Return list representation of number * 9!. """
-    return list(digits_gen(number * FACTORIALS[9]))
 
 N_Number = namedtuple("N_Number", "prefix suffix_len")
 
 
 def reverse_f(f_value):
-    suffix_len, f_prefix = divmod(f_value, FACTORIALS[9])
+    """
+    Returns n such that f(n) = f_value.
+    """
+    suffix_len, f_prefix = divmod(int(f_value), FACTORIALS[9])
     prefix = PREFIX[f_prefix]
     return N_Number(prefix, suffix_len)
 
+
 def smaller_n(n1, n2):
+    """ Compare two N_Numbers and returns smaller one. """
     p1, s1 = n1
     p2, s2 = n2
     p1l = len(str(p1)) + s1
@@ -91,7 +94,7 @@ def smaller_n(n1, n2):
 
 def build_first_number_with(digits_sum):
     """
-    Build the smallest number with given sum of digits
+    Build the smallest number (f_value) with given digits sum.
     :param digits_sum: 
     :return: list of digits in reverse order
     for digits sum 20 returns: [9, 9, 2], 
@@ -118,6 +121,10 @@ class FDigits:
         """ Return number value as str. """
         return ''.join([str(d) for d in self.num[::-1]])
 
+    def __int__(self):
+        """ Return number value as int. """
+        return reduce(lambda x, y: x * 10 + y, self.num[::-1])
+
     def __iter__(self):
         """ Returns itself as an iterator object. """
         return self
@@ -133,11 +140,6 @@ class FDigits:
             self.next_number()
         return self
 
-    @property
-    def value(self):
-        """ Return number value as int """
-        return reduce(lambda x, y: x * 10 + y, self.num[::-1])
-
     def digits_sum(self):
         """
         Sum of all digits.
@@ -146,9 +148,8 @@ class FDigits:
 
     def next_number(self):
         """
-        Finds next value with self.sum digits sum
+        Finds next value with self.sum digits sum'
         """
-
         def increase_digit(need, digit):
             """
             Increase digit by amount needed. Return missing amount and increased digit
@@ -180,7 +181,7 @@ class FDigits:
 
         # Get next f_value with self.sum
         self.cost = 0
-        next_value = self.value + 1
+        next_value = int(self) + 1
         # skip all numbers with sum of digits greater than required
         while digits_sum(next_value) > self.sum:
             next_value += 1
@@ -198,17 +199,11 @@ def f(n):
     :param n: number
     :return: sum digits factorial of n
     """
-    if isinstance(n, str):
-        n = int(n)
-    if isinstance(n, int):
-        return sum([FACTORIALS[d] for d in digits_gen(n)])
-    elif isinstance(n, list):
-        return sum([FACTORIALS[d] for d in n])
-    else:
-        return sum([FACTORIALS[d] for d in n.digits_gen()])
+    return sum(FACTORIALS[d] for d in digits_gen(int(n)))
 
 
 def prefix_lt_prefix(prefix1, prefix2):
+    """ Compare prefix values. """
     p1 = str(prefix1)
     p2 = str(prefix2)
     p_len = max(len(p1), len(p2))
@@ -255,16 +250,16 @@ def g_sequence(max_i):
 
     for i in range(1, max_i + 1):
         equal_sum_numbers = FDigits(i)
-        first_value = next(equal_sum_numbers).value
+        first_value = int(next(equal_sum_numbers))
         cost = equal_sum_numbers.cost
         best_n = reverse_f(first_value)
         best_f = first_value
         for number in equal_sum_numbers:
             cost += number.cost
-            n = reverse_f(number.value)
+            n = reverse_f(number)
             best_n = smaller_n(best_n, n)
             if best_n == n:
-                best_f = number.value
+                best_f = int(number)
             # print(f'Best value is {best_n.prefix} {best_n.suffix_len}')
             if n.suffix_len >= best_n.suffix_len + len(best_n.prefix):
                 break
@@ -276,7 +271,7 @@ def g_sequence(max_i):
             if best_n.prefix:
                 prefix = best_n.prefix + '+'
             print(
-                f'cost: {cost:12}, len={l_str:21}, f(n) = {best_f:40}, '
+                f'cost: {cost:12}, len={l_str:21}, f(n) = {int(best_f):40}, '
                 f'g({i}) = {prefix}9*{best_n.suffix_len}')
         sg_cache[i] = digits_sum(best_n.prefix) + 9 * best_n.suffix_len
         g_cache[i] = best_n

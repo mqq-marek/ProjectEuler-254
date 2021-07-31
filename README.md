@@ -354,33 +354,30 @@ maximum d times except 9.
 
 ```python
 class Digits:
+    """
+    Class implements number as reverse order list of decimal digits.
+    """
     def __init__(self, number):
-        if isinstance(number, int):
-            self.num = list(digits_gen(number))
-        elif isinstance(number, str):
-            self.num = [int(ch) for ch in number[::-1]]
-        else:
-            self.num = number.num
+        self.num = [int(ch) for ch in str(number)[::-1]]
 
     def __str__(self):
-        """ Return number value as str """
-        return ''.join([str(d) for d in self.num[::-1]])
+        """ Return number value as str. """
+        return ''.join(str(d) for d in self.num[::-1])
 
-    @property
-    def value(self):
-        """ Return number value as int """
+    def __int__(self):
+        """ Return number value as int. """
         return reduce(lambda x, y: x * 10 + y, self.num[::-1])
 
     def next(self, start_digit=0):
         def update(d, pos):
             """
-            Keep max d digits d from position pos
+            Keep max d digits d from position pos.
             :param d: digit to verify occurs no more than d times except 9
-            :param pos: starting position 
+            :param pos: starting position
             :return: return next digit, position for next verify
             """
             # to is max position for d times digit d. if d is 9 no limit for digit 9 so position is up to 0
-            to = pos - d if d < 9 else -1  
+            to = pos - d if d < 9 else -1
             for i in range(pos, to, -1):
                 if i < 0:   # return no more updates if process the whole number
                     return None, None
@@ -391,45 +388,38 @@ class Digits:
             # now we are after d times digit d
             if to < 0:  # exit if end of number
                 return None, None
-            if self.num[pos - d] <= d + 1:   # next digit must be minimum one higher than previous 
+            if self.num[pos - d] <= d + 1:   # next digit must be minimum one higher than previous
                 self.num[pos - d] = d + 1
             return self.num[pos-d], pos-d  # process next number
 
         def update_prefix():
-            """ 
+            """
             Update number to fulfill PREFIX definition 122333444455555...
             """
             start = len(self.num) - 1
             digit, start = update(self.num[start], start)
             while digit:
                 digit, start = update(digit, start)
-            # print(self.num)
 
         ndx = start_digit
         while True:
             if self.num[ndx] < 9:
-                # Non 9 digit so increase it and set all on right to the same value
+                # Non 9 digit so increase it and set prefix according definition
                 self.num[ndx] += 1
                 update_prefix()
-                return self
+                return
             elif ndx < len(self.num) - 1:
                 # if digit 9 then go to next digit
                 self.num[ndx] = 0
                 ndx += 1
             else:
-                # if all digits are 9, then new digit starting with
+                # if all digits are 9, then next digit starting with 1
                 self.num[ndx] = 0
                 self.num.append(1)
                 update_prefix()
-                return self
-
-    def digits_gen(self):
-        """"  Number digits generator """
-        for d in self.num:
-            yield d
-
+                return
 ```
-New algorithm is only 4 times faster than day before.
+New algorithm is 30 times faster than day before.
 We need huge increase.
 
 Let's try harder next day.
