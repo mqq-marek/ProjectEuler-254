@@ -1,7 +1,7 @@
 """
 Euler challenge from HackerRank https://www.hackerrank.com/contests/projecteuler/challenges/euler254/problem
 
-Speed, speed, ... improvement - Day 4
+Final submission with constant time - based on formula for sum_sg.
 
 """
 
@@ -296,7 +296,8 @@ sum_sg(50000000) has length 12 last digits are 989282535332 computed in 1.81 sec
 sum_sg(500000000) has length 12 last digits are 464253963566 computed in 1.61 seconds
 sum_sg(5000000000) has length 12 last digits are 785396820556 computed in 2.70 seconds
 
-sum_sg(100000000000000000000000000000000000000000000000000) has length 18 
+
+sum_sg(100000000000000000000000000000000000000000000000000)  
 last digits are 380952380947918 computed in 0.00 seconds
 
 """

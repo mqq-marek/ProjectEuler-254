@@ -119,7 +119,7 @@ class FDigits:
 
     def __str__(self):
         """ Return number value as str. """
-        return ''.join([str(d) for d in self.num[::-1]])
+        return ''.join(str(d) for d in self.num[::-1])
 
     def __int__(self):
         """ Return number value as int. """
@@ -291,6 +291,11 @@ def sg(i):
 
 
 def sum_sg_mod(n, m):
+    """
+    Define sum_sg as sum sg in range 1 to n modulo m.
+    :param n:
+    :return:
+    """
     g_sequence(n, mod=m)
     s = 0
     for i in range(1, n + 1):
@@ -299,11 +304,17 @@ def sum_sg_mod(n, m):
 
 
 def sum_sg(n):
+    """
+    Define sum_sg as sum sg in range 1 to n.
+    :param n:
+    :return:
+    """
     g_sequence(n)
     return sum([sg(i) for i in range(1, n + 1)])
 
 
 def assert_sg():
+    """ Verify sg values. """
     sg_table = [1, 2, 5, 6, 7, 3, 4, 5, 6, 7, 8, 8, 9, 13, 9, 10, 11, 13, 14, 15, 16, 17, 18, 13, 14, 15, 9, 10, 11, 12,
                 13, 14, 12, 13, 14, 15, 19, 28, 24, 25, 37, 31, 32, 45, 46, 50, 66, 67, 71, 84, 89, 90, 114, 118, 134,
                 154, 158, 193, 231, 235, 247, 317, 321, 545, 843, 1052, 1339, 1574, 1846, 2035, 2294, 2566, 5035, 7578,
@@ -333,6 +344,7 @@ def assert_sg():
 
 
 def dic_as_list(dic, *, seq=True):
+    """ Make list from dictionary with keys being sequences of natural numbers. """
     lst = []
     for k in range(1, max(dic.keys())+1):
         if dic.get(k):
@@ -345,6 +357,7 @@ def dic_as_list(dic, *, seq=True):
 
 
 def print_const_tables():
+    """ Print predefined tables/values. """
     print(f'g_cache size {len(g_cache)}')
     g_table = [(g.prefix, g.suffix_len) for g in dic_as_list(g_cache)]
     print(f'g_table = {g_table}')
@@ -352,6 +365,7 @@ def print_const_tables():
 
 
 def hacker_main():
+    """ Main for hackerrank. """
     init_prefixes()
     q = int(input())
     for _ in range(q):
@@ -361,6 +375,7 @@ def hacker_main():
 
 
 def profile_main(size=200):
+    """" Main with profiler. """
     with cProfile.Profile() as pr:
         init_prefixes()
         sum_sg(size)
@@ -373,6 +388,7 @@ def profile_main(size=200):
 
 
 def development_main(size=200):
+    """ Main for developemnt. """
     pgm_start = time.perf_counter()
     init_prefixes()
     print(FACTORIALS)
@@ -394,11 +410,6 @@ if __name__ == "__main__":
     exit()
 
 """
-sum_sg(100) is 19846950 computed in 59.06 seconds
-sum_sg(150) is 8184523820510 computed in 61.08 seconds
-sum_sg(200) is 2728174603174619234 computed in 62.22 seconds
-sum_sg(250) is 1016865079365079365100280 computed in 54.30 seconds
-
 cost:       999993, len=1                    , f(n) =                                        1, g(1) = 1+9*0
 cost:       999978, len=1                    , f(n) =                                        2, g(2) = 2+9*0
 cost:       999937, len=1                    , f(n) =                                      120, g(3) = 5+9*0
@@ -649,4 +660,5 @@ cost:            1, len=...9611992945326300  , f(n) =             49999999999999
 cost:            1, len=...1534391534391553  , f(n) =             5999999999999999999999999999, g(248) = 1223334444567777888+9*16534391534391534391534
 cost:            1, len=...3456790123456803  , f(n) =             6999999999999999999999999999, g(249) = 1233456666668+9*19290123456790123456790
 cost:            1, len=...5379188712522066  , f(n) =             7999999999999999999999999999, g(250) = 134446666777778888888+9*22045855379188712522045
+sum_sg(250) is 1016865079365079365100280 computed in 64.34 seconds
 """

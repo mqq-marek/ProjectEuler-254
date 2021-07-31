@@ -1,7 +1,7 @@
 """
 Euler challenge from HackerRank https://www.hackerrank.com/contests/projecteuler/challenges/euler254/problem
 
-Speed, speed, ... improvement - Day 4
+Speed, speed, ... improvement - Day 5
 
 """
 

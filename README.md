@@ -432,7 +432,7 @@ Tests are in test_euler_day_02.py.
 
 In previous days we worked on faster method for finding n such that g(i) is n. 
 
-Now we are ready to notice why id does not help us find solution.
+Now we are ready to notice why it does not help us find solution.
 
 
 g(i) is defined as smallest number n such sf(n) 
@@ -589,7 +589,11 @@ class FDigits:
     def __str__(self):
         """ Return number value as str. """
         return ''.join([str(d) for d in self.num[::-1]])
-
+    
+    def __int__(self):
+        """ Return number value as int. """
+        return reduce(lambda x, y: x * 10 + y, self.num[::-1])
+    
     def __iter__(self):
         """ Returns itself as an iterator object. """
         return self
@@ -604,11 +608,6 @@ class FDigits:
         else:
             self.next_number()
         return self
-
-    @property
-    def value(self):
-        """ Return number value as int """
-        return reduce(lambda x, y: x * 10 + y, self.num[::-1])
 
     def digits_sum(self):
         """
