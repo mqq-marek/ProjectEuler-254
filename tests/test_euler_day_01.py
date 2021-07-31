@@ -8,7 +8,7 @@ def execute_before_any_test():
     e.g_sequence(45)
 
 
-def test_digits_gen():
+def test_digits_d1_gen():
     assert list(e.digits_gen(0)) == [0]
     assert list(e.digits_gen(10)) == [0, 1]
     assert list(e.digits_gen(342)) == [2, 4, 3]
@@ -38,12 +38,12 @@ def test_digits_gen():
 
 
 
-def test_digits_f():
+def test_digits_d1_f():
     assert e.f(Digits(342)) == e.f(342) == 32
     assert e.f(Digits(5)) == 120
     assert e.f(Digits(25)) == 122
 
-def test_sg_01():
+def test_d1_sg():
     assert sg(1) == 1
     assert sg(2) == 2
     assert sg(3) == 5

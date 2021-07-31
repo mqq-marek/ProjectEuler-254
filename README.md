@@ -110,22 +110,29 @@ but digits sum is not depend on the digits order
 
 ```python
 def digits_gen(n):
+    """
+    Yields number n digits in reverse sequence. For n = 342 sequence is 2, 4, 3.
+    :param n:
+    :return:
+    """
     while True:
         yield n % 10
         n //= 10
         if not n:
             break
-
-def digits_sum(n):
-    return sum([d for d in digits_gen(n)])   
+            
 
 def f(n):
-    return sum([FACTORIALS[d] for d in digits_gen(n)])
-    
-def sf(n): 
-    return digits_sum(f(n)) 
-```
+    """
+    Define f(n) as the sum of the factorials of the digits of n.
+    For example:
+        f(342) = 3! + 4! + 2! = 32
+    :param n: number
+    :return: sum digits factorial of n
+    """
+    return sum(FACTORIALS[d] for d in digits_gen(int(n)))
 
+```
 
 Now let's look at function sg and sum_sg. 
 Our final function sum_sg need 
@@ -145,36 +152,56 @@ In other way key, value pair means that g(key) = value.
 sf_cache = {}
 
 def sf(n):
+    """
+    Compute sf(n) as the sum of the digits of f(n).
+    Store in sf_cache the value n for which the reached the first time key sf(n)
+    So:
+    sf(144) = 4 + 9 = 13 as f(144) is 1!+4!+4! = 49
+    For n = 144 is minimum n such that sf(n) = 13 so sf_cache[13] = 144
+    :param n: number
+    :return: sum digits of f(n)
+    """
     sf_ = digits_sum(f(n))
     sf_cache.setdefault(sf_, str(n))
     return sf_
+
 ```
 
 And instead of g(i) lets define g_sequence(i) 
-which will scan n form 1 until its find g(1), g(2), ..., g(n)
+which will scan n form 1 until its find g(1), g(2), ..., g(n) and keeps
+them in sf_cache.
 
 ```python
 def g_sequence(max_i):
-    n = 1
+    """
+    Looks for g(i) in range 1..max_i
+    Define g(i) to be the smallest positive integer n such that sf(n) == i.
+    Results are in a global cached dictionary
+    sf(342) = 5, also sf(25) = 5 and 25 is the smallest number giving sf(i) = 5, so g(5) = 25
+    :param max_i: range for compute g(i) from 1 to max_i
+    :return: None
+    """
+    n = Digits(1)
     for i in range(1, max_i + 1):
         if not sf_cache.get(i):
             start_time = time.perf_counter()
             while sf(n) != i:
-                n += 1
+                n.next()
             stop_time = time.perf_counter()
             if DEBUG:
                 print(
-                    f"For n = {n:10} sf(n) = {i:2}. sg({i:2}) = {sum([d for d in digits_gen(n)]):2}. "
+                    f"For n = {str(n):40} sf(n) = {i:2}. "
+                    f"sg({i:2}) = {digits_sum(n):2}. "
                     f"Time: {stop_time-start_time:8.4f} seconds"
                 )
         else:
             if DEBUG:
                 print(
-                    f"For n = {sf_cache[i]:10} sf(n) = {i:2}. "
-                    f"sg({i:2}) = {sum([d for d in digits_gen(sf_cache[i])]):2}. "
+                    f"For n = {sf_cache[i]:40} sf(n) = {i:2}. "
+                    f"sg({i:2}) = {digits_sum(sf_cache[i]):2}. "
                     f"Time: Computed in earlier step"
                 )
-    return sf_cache
+    return
 ```
 
 There are many operations here on number digits instead of number value.
@@ -184,12 +211,15 @@ Let's define class Digits which will represent the numbers.
 Internally we will represent number as a list of digits (integers 0-9). 
 List will keep digits in reverse order starting from least significant.
 
-We define methods __str__ and value for converting number to string 
-and int.
-Method next will find the next number for testing f values. 
+We define methods __str__ and __int__. Duck typing allows class Digits 
+to behave as int with implicit str and int conversions.
 
-Now is a time for first analysis. We will try to find better way to 
-guess proper n such that n = g(i) than simply increase n.
+Method next will find the next prospect number n which can resolve g(i).
+
+Now is a time for first analysis. We need to find better way for guessing 
+n such that n = g(i) than simply increase n.
+
+Let's analyze how our numbers behave:
 - If we have numbers n0, n1, n2, ... having the same f_value 
   we need to find the smallest one and skip all others. 
   E.g., 2 = f(2) = f(11) = f(1223) = f(2333). So, we need only 2.
@@ -213,17 +243,22 @@ after 239999 next is 244444 not 24000.
 
 ```python
 class Digits:
+    """
+    Class implements number as reverse order list of decimal digits.
+    """
     def __init__(self, number):
-        self.num = list(digits_gen(number))
+        self.num = [int(ch) for ch in str(number)[::-1]]
 
     def __str__(self):
-        return ''.join([str(d) for d in self.num[::-1]])
+        """ Return number value as str. """
+        return ''.join(str(d) for d in self.num[::-1])
 
-    @property
-    def value(self):
+    def __int__(self):
+        """ Return number value as int. """
         return reduce(lambda x, y: x * 10 + y, self.num[::-1])
 
     def next(self, start_digit=0):
+        """ Return next number being candidate for g(i) result. """
         def set_after_carry_on(k):
             """ Set digits after carry on 1.
             Instead of  0 fill with updated digit
@@ -236,25 +271,28 @@ class Digits:
         ndx = start_digit
         while True:
             if self.num[ndx] < 9:
-                # Non 9 digit so increase it and set all on right to the same value
+                # Non 9 digit so increase it
                 self.num[ndx] += 1
+                # Set all less significant digits to the same value as digits are in non-decrease order
                 set_after_carry_on(ndx)
                 return self
             elif ndx < len(self.num) - 1:
-                # if digit 9 then go to next digit
+                # Digit 9, but not the highest one,  then go to next digit
                 self.num[ndx] = 0
                 ndx += 1
             else:
-                # if all digits are 9, then new digit starting with
+                # if all digits are 9, then add 1 as the next digit
                 self.num.append(1)
+                self.num[ndx] = 0
                 set_after_carry_on(ndx+1)
                 return self
-
 ```
 
+With class Digits defined we can greatly improve sf(n) computing time
+as we have number n representation as sequence of digits.
+
 Now speed of the algorithm is around 600 times faster, 
-but it allows as to increase computing sum_sg from 45 to 55 
-in time of one minute.
+but it allows as to increase computing sum_sg from 45 to 55 in one minute.
 
 For g(45), n is 12378889
 
@@ -263,10 +301,9 @@ For g(55), n is 1333666799999999999
 For g(60), n is 1233456679999999999999999999999
 
 
-
 You can notice now that, the n size increases very fast.
 That is a reason why finding incrementally such n that sf(n) = i
-for i > 70 will not work.
+for i > 55 starts to work very slowly.
 
 Python code is in file euler_day_01.py. 
 Tests are in test_euler_day_01.py. 

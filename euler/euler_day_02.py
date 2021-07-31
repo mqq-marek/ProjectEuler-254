@@ -28,6 +28,13 @@ def digits_gen(n):
 
 
 def digits_sum(n):
+    """
+    Returns sum of digits of number n.
+    For example:
+        digits_sum(245) = 2 + 4 + 5
+    :param n: n
+    :return: sum of digits
+    """
     if isinstance(n, int):
         return sum([d for d in digits_gen(n)])
     elif isinstance(n, str):
