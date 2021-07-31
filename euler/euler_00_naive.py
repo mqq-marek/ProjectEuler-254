@@ -4,8 +4,9 @@ Euler challenge from HackerRank https://www.hackerrank.com/contests/projecteuler
 Initial design - Day 0
 
 """
-import math
 import time
+import math
+
 
 DEBUG = False
 
@@ -18,7 +19,7 @@ def digits_sum(n):
     :param n: n
     :return: sum of digits
     """
-    return sum([int(ch) for ch in str(n)])
+    return sum(int(ch) for ch in str(n))
 
 
 def f(n):
@@ -29,7 +30,7 @@ def f(n):
     :param n: number
     :return: sum digit factorial
     """
-    return sum([math.factorial(int(ch)) for ch in str(n)])
+    return sum(math.factorial(int(ch)) for ch in str(n))
 
 
 def sf(n):
@@ -74,8 +75,17 @@ def sg(i):
     return sg_
 
 
-def sum_sg(n):
-    return sum([sg(i) for i in range(1, n + 1)])
+def sum_sg(n, m=None):
+    """
+    Define sum_sg as sum sg in range 1 to n modulo m.
+    :param n:
+    :param m: if present - result modulo m
+    :return:
+    """
+    sum_sg_ = sum(sg(i) for i in range(1, n + 1))
+    if m:
+        sum_sg_ %= m
+    return sum_sg_
 
 
 if __name__ == "__main__":

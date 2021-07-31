@@ -11,26 +11,77 @@ That naive approach is based on functions definition.
 ```python
 import math
 
+
+DEBUG = False
+
+
 def digits_sum(n):
-    return sum([int(ch) for ch in str(n)])  
+    """
+    Returns sum of digits of number n
+    For example:
+        digits_sum(245) = 2 + 4 + 5
+    :param n: n
+    :return: sum of digits
+    """
+    return sum(int(ch) for ch in str(n))
+
 
 def f(n):
-    return sum([math.factorial(int(ch)) for ch in str(n)])
+    """
+    Define f(n) as the sum of the digit factorials for given number n.
+    For example:
+        f(342) = 3! + 4! + 2! = 32
+    :param n: number
+    :return: sum digit factorial
+    """
+    return sum(math.factorial(int(ch)) for ch in str(n))
+
 
 def sf(n):
+    """
+    Define sf(n) as the sum of the digits of f(n).
+    So:
+    sf(342) = 3 + 2 as f(342) is 3! + 4! +2! = 32
+    :param n: number
+    :return: sum digits of f(n)
+    """
     return digits_sum(f(n))
 
+
 def g(i):
+    """
+    Define g(i) to be the smallest positive integer n such that sf(n) == i.
+    sf(342) = 5, also sf(25) = 5 and 25 is the smallest number giving sf(i) = 5, so g(5) = 25
+    :param i: number
+    :return: smallest n such that sf(n) == i
+    """
     n = 1
     while sf(n) != i:
         n += 1
     return n
 
-def sg(i):
-    return digits_sum(g(i))
 
-def sum_sg(n):
-    return sum([sg(i) for i in range(1, n + 1)])
+def sg(i):
+    """
+    Define  sg(i) as the sum of the digits of g(i).
+    So sg(5) = 2 + 5 = 7 as g(5) = 25.
+    :param i:
+    :return: sum digits of g(i)
+    """
+    return digits_sum(n)
+
+
+def sum_sg(n, m=None):
+    """
+    Define sum_sg as sum sg in range 1 to n modulo m.
+    :param n: 
+    :param m: if present - result modulo m
+    :return: 
+    """
+    sum_sg_ = sum(sg(i) for i in range(1, n + 1))
+    if m:
+        sum_sg_ %= m
+    return sum_sg_
 ```
 
 Day 0 contains only initial code extended with simple reporting and test cases.
