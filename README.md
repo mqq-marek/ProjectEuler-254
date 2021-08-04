@@ -1,4 +1,4 @@
-# hackerrank-euler:  Sums of Digit Factorials - problem #254
+# Project Euler #254 - Sums of Digit Factorials
 
 ## Day 0
 
