@@ -96,7 +96,7 @@ Tests are in test_euler_00_naive.py.
 
 ## Day 1
 
-We start with some basic refactoring at the begining.
+We start with some basic refactoring at the beginning.
 
 Let's define factorials values for digits 1-9:
 ```python
@@ -316,12 +316,12 @@ We will look more detailed on the way how different n gives the same f(n).
 Yesterday we noticed that, the prospect number n has digits ordered 
 from smallest to highest. 
 
-We fonded also some reduction property - n does not have digit 0 
+We find also some reduction property - n does not have digit 0 
 and n has only one digit 1 (11 digits can be 
 replaced by 2 which makes smaller number because number is horter by one digit).
 
 
-If we apply the same redustion rules to others digit we can easily 
+If we apply the same reduction rules to others digit we can easily 
 find that:
 - f(222) = f(3) as 2!+2!+2! = 3!
 - f(3333) = f(4)
@@ -336,7 +336,7 @@ the following pattern:
 - digits are in ascending order
 - there is max 1 time 1, 2 times 2, ..., 8 times 8 and any number of 9 digits
 
-Based on thi we can look at n as number composed of two parts: 
+Based on this we can look at n as number composed of two parts: 
 prefix and suffix. 
 - Prefix contains digits from 1 to 8 and has length in range 0 to 36
   digits. The longest prefix 12233344445555566666677777778888888 has
@@ -448,7 +448,7 @@ and i // 9 digits n.
 So f(n) has ceil(i//9) digits. 
 
 Having f(n) we can find n. 
-We know that having n f(n) is build as a sum of number n digits factorial.
+We know that having n f(n) is built as a sum of number n digits factorial.
 Part with prefix is responsible for value from 0 to 9!-1 
 and every digit 9 is responsible for value 9! in f(n). 
 Simply for f(n) n has f(n)/9! digits 9 and prefix in length between 0 and 36 
@@ -471,11 +471,11 @@ will not work for i > 80.
 
 We need to find cheaper method for finding g(i). 
 
-So instead of generate successive n, lets 
+So instead of generate successive n, let 
 try for given i generate successive f_values 
 with sum of digits equals i.
 
-Next we need to built reverse f function which from f_value gives us n.
+Next we need to build reverse f function which from f_value gives us n.
 We know that n  contains 
 some digits from:
 - PREFIX: 122333444455555666666777777788888888 and
@@ -549,7 +549,7 @@ def init_prefixes():
     PREFIX[0] = ''
 ```
 
-For fining f values with given sum  we define FDigits class with 
+For finding f values with given sum  we define FDigits class with 
 the following approach:
 - class constructor need to have parameter - number of digits
 - class works as iterator so class object will generate  
@@ -847,7 +847,7 @@ On next day we will try join the best part of Day 2 and Day 3 solutions.
 
 
 ### Numbers representation
-Two most frequent number representation are base on radix 10 and 2.
+Two most frequent number representation are based on radix 10 and 2.
 When you have number 1,000,000,000 times bigger than 
 its representation in decimal format is plus 9 digits longer, binary representation
 is plus 30 digits longer.
